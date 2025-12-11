@@ -1,40 +1,48 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <AssemblyTitle>Workflow Core</AssemblyTitle>
-    <Authors>Daniel Gerlag</Authors>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>WorkflowCore</AssemblyName>
-    <PackageId>WorkflowCore</PackageId>
-    <PackageTags>workflow;.NET;Core;state machine</PackageTags>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Description>Workflow Core is a light weight workflow engine targeting .NET Standard.</Description>
-  </PropertyGroup>
+	<PropertyGroup>
+		<AssemblyTitle>Workflow Core</AssemblyTitle>
+		<Authors>Daniel Gerlag</Authors>
+		<TargetFramework>net9.0</TargetFramework>
+		<AssemblyName>WorkflowCore</AssemblyName>
+		<PackageId>WorkflowCore</PackageId>
+		<PackageTags>workflow;.NET;Core;state machine</PackageTags>
+		<GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+		<GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+		<Description>Workflow Core is a light weight workflow engine targeting .NET Standard.</Description>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<RootNamespace />
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="ConcurrentHashSet" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="2.2.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
-    <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
-    <PackageReference Include="System.Reflection" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.7.0" />
-    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-    <PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
-    <PackageReference Include="OpenTelemetry.Api" Version="1.12.0" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.0" />
-	<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-		<_Parameter1>WorkflowCore.IntegrationTests</_Parameter1>
-	</AssemblyAttribute>
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="WorkflowCore\Services\DefinitionStorage\**" />
+		<EmbeddedResource Remove="WorkflowCore\Services\DefinitionStorage\**" />
+		<None Remove="WorkflowCore\Services\DefinitionStorage\**" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\DefinitionStorage\" />
-  </ItemGroup>
+	<ItemGroup>
+	  <Content Remove="C:\Users\haoxj\.nuget\packages\system.diagnostics.diagnosticsource\9.0.0\contentFiles\any\netstandard2.0\ILLink\ILLink.Descriptors.LibraryBuild.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ConcurrentHashSet" Version="1.1.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Extensions.ObjectPool" Version="2.2.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
+		<PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
+		<PackageReference Include="System.Reflection" Version="4.3.0" />
+		<PackageReference Include="System.Reflection.TypeExtensions" Version="4.7.0" />
+		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+		<PackageReference Include="System.Linq.Queryable" Version="4.3.0" />
+		<PackageReference Include="OpenTelemetry.Api" Version="1.12.0" />
+		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.0" />
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>WorkflowCore.IntegrationTests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
 
 </Project>

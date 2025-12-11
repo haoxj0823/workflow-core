@@ -88,7 +88,7 @@ namespace WorkflowCore.Services
             using (var scope = _serviceProvider.CreateScope())
             {
                 var middlewareRunner = scope.ServiceProvider.GetRequiredService<IWorkflowMiddlewareRunner>();
-                await middlewareRunner.RunPreMiddleware(wf, def);
+                await middlewareRunner.RunPreMiddlewareAsync(wf, def);
             }
 
             string id = await _persistenceStore.CreateNewWorkflow(wf);

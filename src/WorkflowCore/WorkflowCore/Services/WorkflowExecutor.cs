@@ -103,7 +103,7 @@ namespace WorkflowCore.Services
             using (var scope = _serviceProvider.CreateScope())
             {
                 var middlewareRunner = scope.ServiceProvider.GetRequiredService<IWorkflowMiddlewareRunner>();
-                await middlewareRunner.RunExecuteMiddleware(workflow, def);
+                await middlewareRunner.RunExecuteMiddlewareAsync(workflow, def);
             }
 
             return wfResult;
@@ -262,7 +262,7 @@ namespace WorkflowCore.Services
             using (var scope = _serviceProvider.CreateScope())
             {
                 var middlewareRunner = scope.ServiceProvider.GetRequiredService<IWorkflowMiddlewareRunner>();
-                await middlewareRunner.RunPostMiddleware(workflow, def);
+                await middlewareRunner.RunPostMiddlewareAsync(workflow, def);
             }
 
             _publisher.PublishNotification(new WorkflowCompleted
