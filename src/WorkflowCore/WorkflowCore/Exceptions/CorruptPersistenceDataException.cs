@@ -1,8 +1,5 @@
-﻿using System;
+﻿namespace WorkflowCore.Exceptions;
 
-namespace WorkflowCore.Exceptions
+public class CorruptPersistenceDataException : Exception
 {
-    public class CorruptPersistenceDataException : Exception
-    {
-    }
 }

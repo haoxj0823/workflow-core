@@ -1,18 +1,13 @@
-using System;
+namespace WorkflowCore.Exceptions;
 
-namespace WorkflowCore.Exceptions
+public class NotFoundException : Exception
 {
-    public class NotFoundException : Exception
+    public NotFoundException()
     {
+    }
 
-        public NotFoundException() : base()
-        {
-
-        }
-
-        public NotFoundException(string message) : base(message)
-        {
-            //
-        }
+    public NotFoundException(string message) 
+        : base(message)
+    {
     }
 }

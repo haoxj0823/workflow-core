@@ -1,8 +1,5 @@
-﻿using System;
+﻿namespace WorkflowCore.Models.LifeCycleEvents;
 
-namespace WorkflowCore.Models.LifeCycleEvents
+public class WorkflowSuspended : LifeCycleEvent
 {
-    public class WorkflowSuspended : LifeCycleEvent
-    {
-    }
 }

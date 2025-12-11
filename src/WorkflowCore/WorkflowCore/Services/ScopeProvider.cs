@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using WorkflowCore.Interface;
 
 namespace WorkflowCore.Services;
 

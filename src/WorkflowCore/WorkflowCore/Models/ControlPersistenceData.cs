@@ -1,7 +1,6 @@
-﻿namespace WorkflowCore.Models
+﻿namespace WorkflowCore.Models;
+
+public class ControlPersistenceData
 {
-    public class ControlPersistenceData
-    {
-        public bool ChildrenActive { get; set; }
-    }
+    public bool ChildrenActive { get; set; }
 }

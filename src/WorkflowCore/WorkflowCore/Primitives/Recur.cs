@@ -1,29 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using WorkflowCore.Interface;
-using WorkflowCore.Models;
+﻿using WorkflowCore.Models;
+using WorkflowCore.Services;
 
-namespace WorkflowCore.Primitives
+namespace WorkflowCore.Primitives;
+
+public class Recur : ContainerStepBody
 {
-    public class Recur : ContainerStepBody
+    public TimeSpan Interval { get; set; }
+
+    public bool StopCondition { get; set; }
+
+    public override ExecutionResult Run(IStepExecutionContext context)
     {
-        public TimeSpan Interval { get; set; }
-
-        public bool StopCondition { get; set; }
-
-        public override ExecutionResult Run(IStepExecutionContext context)
+        if (StopCondition)
         {
-            if (StopCondition)
-            {
-                return ExecutionResult.Next();
-            }
-
-            return new ExecutionResult
-            {
-                Proceed = false,
-                BranchValues = new List<object> { null },
-                SleepFor = Interval
-            };
+            return ExecutionResult.Next();
         }
+
+        return new ExecutionResult
+        {
+            Proceed = false,
+            BranchValues = [null],
+            SleepFor = Interval
+        };
     }
 }

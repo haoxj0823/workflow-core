@@ -1,108 +1,110 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 
-namespace WorkflowCore.Models
+namespace WorkflowCore.Models;
+
+public class ExecutionPointerCollection : ICollection<ExecutionPointer>
 {
-    public class ExecutionPointerCollection : ICollection<ExecutionPointer>
+    private readonly Dictionary<string, ExecutionPointer> _dictionary = [];
+    private readonly Dictionary<string, ICollection<ExecutionPointer>> _scopeMap = [];
+
+    public ExecutionPointerCollection()
     {
-        private readonly Dictionary<string, ExecutionPointer> _dictionary = new Dictionary<string, ExecutionPointer>();
-        private readonly Dictionary<string, ICollection<ExecutionPointer>> _scopeMap = new Dictionary<string, ICollection<ExecutionPointer>>();
+    }
 
-        public ExecutionPointerCollection()
+    public ExecutionPointerCollection(ICollection<ExecutionPointer> pointers)
+    {
+        foreach (var ptr in pointers)
         {
+            Add(ptr);
         }
+    }
 
-        public ExecutionPointerCollection(int capacity)
+    public IEnumerator<ExecutionPointer> GetEnumerator()
+    {
+        return _dictionary.Values.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public ExecutionPointer FindById(string id)
+    {
+        if (_dictionary.TryGetValue(id, out ExecutionPointer value))
         {
-            _dictionary = new Dictionary<string, ExecutionPointer>(capacity);
+            return value;
         }
+        return null;
+    }
 
-        public ExecutionPointerCollection(ICollection<ExecutionPointer> pointers)
+    public ICollection<ExecutionPointer> FindByScope(string stackFrame)
+    {
+        if (_scopeMap.TryGetValue(stackFrame, out ICollection<ExecutionPointer> value))
         {
-            foreach (var ptr in pointers)
-            {
-                Add(ptr);
-            }
+            return value;
         }
+        return [];
+    }
 
-        public IEnumerator<ExecutionPointer> GetEnumerator()
-        {
-            return _dictionary.Values.GetEnumerator();
-        }
+    public void Add(ExecutionPointer item)
+    {
+        _dictionary.Add(item.Id, item);
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public ExecutionPointer FindById(string id)
-        {
-            if (!_dictionary.ContainsKey(id))
-                return null;
-
-            return _dictionary[id];
-        }
-
-        public ICollection<ExecutionPointer> FindByScope(string stackFrame)
+        foreach (var stackFrame in item.Scope)
         {
             if (!_scopeMap.ContainsKey(stackFrame))
-                return new List<ExecutionPointer>();
-
-            return _scopeMap[stackFrame];
-        }
-
-        public void Add(ExecutionPointer item)
-        {
-            _dictionary.Add(item.Id, item);
-
-            foreach (var stackFrame in item.Scope)
             {
-                if (!_scopeMap.ContainsKey(stackFrame))
-                    _scopeMap.Add(stackFrame, new List<ExecutionPointer>());
-                _scopeMap[stackFrame].Add(item);
+                _scopeMap.Add(stackFrame, []);
             }
+            _scopeMap[stackFrame].Add(item);
         }
-
-        public void Clear()
-        {
-            _dictionary.Clear();
-            _scopeMap.Clear();
-        }
-
-        public bool Contains(ExecutionPointer item)
-        {
-            return _dictionary.ContainsValue(item);
-        }
-
-        public void CopyTo(ExecutionPointer[] array, int arrayIndex)
-        {
-            _dictionary.Values.CopyTo(array, arrayIndex);
-        }
-
-        public bool Remove(ExecutionPointer item)
-        {
-            foreach (var stackFrame in item.Scope)
-            {
-                _scopeMap[stackFrame].Remove(item);
-            }
-
-            return _dictionary.Remove(item.Id);
-        }
-
-        public ExecutionPointer Find(Predicate<ExecutionPointer> match)
-        {
-            return _dictionary.Values.FirstOrDefault(x => match(x));
-        }
-
-        public ICollection<ExecutionPointer> FindByStatus(PointerStatus status)
-        {
-            //TODO: track states in hash table
-            return _dictionary.Values.Where(x => x.Status == status).ToList();
-        }
-
-        public int Count => _dictionary.Count;
-        public bool IsReadOnly => false;
     }
+
+    public void Clear()
+    {
+        _dictionary.Clear();
+        _scopeMap.Clear();
+    }
+
+    public bool Contains(ExecutionPointer item)
+    {
+        return _dictionary.ContainsValue(item);
+    }
+
+    public void CopyTo(ExecutionPointer[] array, int arrayIndex)
+    {
+        _dictionary.Values.CopyTo(array, arrayIndex);
+    }
+
+    public bool Remove(ExecutionPointer item)
+    {
+        foreach (var stackFrame in item.Scope)
+        {
+            if (_scopeMap.TryGetValue(stackFrame, out var collection))
+            {
+                collection.Remove(item);
+                if (collection.Count == 0)
+                {
+                    _scopeMap.Remove(stackFrame);
+                }
+            }
+        }
+        return _dictionary.Remove(item.Id);
+    }
+
+    public ExecutionPointer Find(Predicate<ExecutionPointer> match)
+    {
+        return _dictionary.Values.FirstOrDefault(x => match(x));
+    }
+
+    public ICollection<ExecutionPointer> FindByStatus(PointerStatus status)
+    {
+        //TODO: track states in hash table
+        return _dictionary.Values.Where(x => x.Status == status).ToList();
+    }
+
+    public int Count => _dictionary.Count;
+
+    public bool IsReadOnly => false;
 }

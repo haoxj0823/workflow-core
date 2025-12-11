@@ -1,12 +1,8 @@
-using System;
+namespace WorkflowCore.Exceptions;
 
-namespace WorkflowCore.Exceptions
+public class WorkflowLockedException : Exception
 {
-    public class WorkflowLockedException : Exception
+    public WorkflowLockedException()
     {
-        public WorkflowLockedException(): base()
-        {
-            //
-        }
     }
 }

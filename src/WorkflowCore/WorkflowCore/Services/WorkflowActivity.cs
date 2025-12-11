@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using WorkflowCore.Interface;
 using WorkflowCore.Models;
 
 using DiagnosticsActivity = System.Diagnostics.Activity;

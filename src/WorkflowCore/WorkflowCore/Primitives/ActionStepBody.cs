@@ -1,17 +1,15 @@
-﻿using System;
-using WorkflowCore.Interface;
-using WorkflowCore.Models;
+﻿using WorkflowCore.Models;
+using WorkflowCore.Services;
 
-namespace WorkflowCore.Primitives
+namespace WorkflowCore.Primitives;
+
+public class ActionStepBody : StepBody
 {
-    public class ActionStepBody : StepBody
+    public Action<IStepExecutionContext> Body { get; set; }
+    
+    public override ExecutionResult Run(IStepExecutionContext context)
     {
-        public Action<IStepExecutionContext> Body { get; set; }
-        
-        public override ExecutionResult Run(IStepExecutionContext context)
-        {
-            Body(context);
-            return ExecutionResult.Next();
-        }
+        Body(context);
+        return ExecutionResult.Next();
     }
 }

@@ -1,6 +1,6 @@
-using WorkflowCore.Interface;
 using WorkflowCore.Persistence.EntityFramework.Services;
 using WorkflowCore.Persistence.SqlServer;
+using WorkflowCore.Services.Persistence;
 using WorkflowCore.UnitTests;
 using Xunit;
 

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using WorkflowCore.Interface;
 using WorkflowCore.Models;
 using WorkflowCore.Models.LifeCycleEvents;
 
@@ -10,22 +9,24 @@ public class LifeCycleEventPublisher : ILifeCycleEventPublisher, IDisposable
 {
     private readonly ILifeCycleEventHub _eventHub;
     private readonly WorkflowOptions _workflowOptions;
-    private readonly ILogger _logger;
+    private readonly ILogger<LifeCycleEventPublisher> _logger;
     private BlockingCollection<LifeCycleEvent> _outbox;
     private Task _dispatchTask;
 
-    public LifeCycleEventPublisher(ILifeCycleEventHub eventHub, WorkflowOptions workflowOptions, ILoggerFactory loggerFactory)
+    public LifeCycleEventPublisher(ILifeCycleEventHub eventHub, WorkflowOptions workflowOptions, ILogger<LifeCycleEventPublisher> logger)
     {
         _eventHub = eventHub;
         _workflowOptions = workflowOptions;
-        _outbox = new BlockingCollection<LifeCycleEvent>();
-        _logger = loggerFactory.CreateLogger(GetType());
+        _outbox = [];
+        _logger = logger;
     }
 
     public void PublishNotification(LifeCycleEvent evt)
     {
         if (_outbox.IsAddingCompleted || !_workflowOptions.EnableLifeCycleEventsPublisher)
+        {
             return;
+        }
 
         _outbox.Add(evt);
     }
@@ -39,7 +40,7 @@ public class LifeCycleEventPublisher : ILifeCycleEventPublisher, IDisposable
 
         if (_outbox.IsAddingCompleted)
         {
-            _outbox = new BlockingCollection<LifeCycleEvent>();
+            _outbox = [];
         }
 
         _dispatchTask = new Task(Execute);
@@ -68,7 +69,7 @@ public class LifeCycleEventPublisher : ILifeCycleEventPublisher, IDisposable
             }
             catch (Exception ex)
             {
-                _logger.LogError(default(EventId), ex, ex.Message);
+                _logger.LogError(default, ex, ex.Message);
             }
         }
     }

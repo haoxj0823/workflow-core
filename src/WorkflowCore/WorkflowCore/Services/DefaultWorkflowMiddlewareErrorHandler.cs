@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using WorkflowCore.Interface;
 
 namespace WorkflowCore.Services;
 

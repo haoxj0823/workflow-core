@@ -1,7 +1,6 @@
-﻿namespace WorkflowCore.Models
+﻿namespace WorkflowCore.Models;
+
+public class IteratorPersistenceData : ControlPersistenceData
 {
-    public class IteratorPersistenceData : ControlPersistenceData
-    {
-        public int Index { get; set; } = 0;
-    }
+    public int Index { get; set; }
 }

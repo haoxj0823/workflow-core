@@ -1,36 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using WorkflowCore.Interface;
-using WorkflowCore.Models;
+﻿using WorkflowCore.Models;
 using WorkflowCore.Models.LifeCycleEvents;
 
-namespace WorkflowCore.Services.ErrorHandlers
+namespace WorkflowCore.Services.ErrorHandlers;
+
+public class SuspendHandler : IWorkflowErrorHandler
 {
-    public class SuspendHandler : IWorkflowErrorHandler
+    private readonly ILifeCycleEventPublisher _eventPublisher;
+    private readonly IDateTimeProvider _datetimeProvider;
+    public WorkflowErrorHandling Type => WorkflowErrorHandling.Suspend;
+
+    public SuspendHandler(ILifeCycleEventPublisher eventPublisher, IDateTimeProvider datetimeProvider)
     {
-        private readonly ILifeCycleEventPublisher _eventPublisher;
-        private readonly IDateTimeProvider _datetimeProvider;
-        public WorkflowErrorHandling Type => WorkflowErrorHandling.Suspend;
+        _eventPublisher = eventPublisher;
+        _datetimeProvider = datetimeProvider;
+    }
 
-        public SuspendHandler(ILifeCycleEventPublisher eventPublisher, IDateTimeProvider datetimeProvider)
+    public void Handle(WorkflowInstance workflow, WorkflowDefinition def, ExecutionPointer pointer, WorkflowStep step, Exception exception, Queue<ExecutionPointer> bubbleUpQueue)
+    {
+        workflow.Status = WorkflowStatus.Suspended;
+        _eventPublisher.PublishNotification(new WorkflowSuspended
         {
-            _eventPublisher = eventPublisher;
-            _datetimeProvider = datetimeProvider;
-        }
+            EventTimeUtc = _datetimeProvider.UtcNow,
+            Reference = workflow.Reference,
+            WorkflowInstanceId = workflow.Id,
+            WorkflowDefinitionId = workflow.WorkflowDefinitionId,
+            Version = workflow.Version
+        });
 
-        public void Handle(WorkflowInstance workflow, WorkflowDefinition def, ExecutionPointer pointer, WorkflowStep step, Exception exception, Queue<ExecutionPointer> bubbleUpQueue)
-        {
-            workflow.Status = WorkflowStatus.Suspended;
-            _eventPublisher.PublishNotification(new WorkflowSuspended
-            {
-                EventTimeUtc = _datetimeProvider.UtcNow,
-                Reference = workflow.Reference,
-                WorkflowInstanceId = workflow.Id,
-                WorkflowDefinitionId = workflow.WorkflowDefinitionId,
-                Version = workflow.Version
-            });
-
-            step.PrimeForRetry(pointer);
-        }
+        step.PrimeForRetry(pointer);
     }
 }

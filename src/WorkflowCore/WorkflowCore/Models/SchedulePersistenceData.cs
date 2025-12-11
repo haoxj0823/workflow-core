@@ -1,8 +1,6 @@
-﻿namespace WorkflowCore.Models
-{
-    public class SchedulePersistenceData
-    {
-        public bool Elapsed { get; set; }
+﻿namespace WorkflowCore.Models;
 
-    }
+public class SchedulePersistenceData
+{
+    public bool Elapsed { get; set; }
 }

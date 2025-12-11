@@ -1,16 +1,14 @@
-﻿using System;
-using WorkflowCore.Interface;
-using WorkflowCore.Models;
+﻿using WorkflowCore.Models;
+using WorkflowCore.Services;
 
-namespace WorkflowCore.Primitives
+namespace WorkflowCore.Primitives;
+
+public class WorkflowStepInline : WorkflowStep<InlineStepBody>
 {
-    public class WorkflowStepInline : WorkflowStep<InlineStepBody>
-    {
-        public Func<IStepExecutionContext, ExecutionResult> Body { get; set; }
+    public Func<IStepExecutionContext, ExecutionResult> Body { get; set; }
 
-        public override IStepBody ConstructBody(IServiceProvider serviceProvider)
-        {
-            return new InlineStepBody(Body);
-        }
+    public override IStepBody ConstructBody(IServiceProvider serviceProvider)
+    {
+        return new InlineStepBody(Body);
     }
 }

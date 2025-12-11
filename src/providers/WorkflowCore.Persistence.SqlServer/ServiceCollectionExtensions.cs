@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Data.Common;
-using WorkflowCore.Interface;
 using WorkflowCore.Models;
 using WorkflowCore.Persistence.EntityFramework.Services;
 using WorkflowCore.Persistence.SqlServer;
+using WorkflowCore.Services;
+using WorkflowCore.Services.Persistence;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

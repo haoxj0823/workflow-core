@@ -1,110 +1,105 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using WorkflowCore.Interface;
-using WorkflowCore.Models;
+﻿using WorkflowCore.Models;
 
-namespace WorkflowCore.Services.ErrorHandlers
+namespace WorkflowCore.Services.ErrorHandlers;
+
+public class CompensateHandler : IWorkflowErrorHandler
 {
-    public class CompensateHandler : IWorkflowErrorHandler
+    private readonly IExecutionPointerFactory _pointerFactory;
+    private readonly IDateTimeProvider _datetimeProvider;
+    private readonly WorkflowOptions _options;
+
+    public WorkflowErrorHandling Type => WorkflowErrorHandling.Compensate;
+
+    public CompensateHandler(IExecutionPointerFactory pointerFactory, IDateTimeProvider datetimeProvider, WorkflowOptions options)
     {
-        private readonly IExecutionPointerFactory _pointerFactory;
-        private readonly IDateTimeProvider _datetimeProvider;
-        private readonly WorkflowOptions _options;
+        _pointerFactory = pointerFactory;
+        _datetimeProvider = datetimeProvider;
+        _options = options;
+    }
 
-        public WorkflowErrorHandling Type => WorkflowErrorHandling.Compensate;
+    public void Handle(WorkflowInstance workflow, WorkflowDefinition def, ExecutionPointer exceptionPointer, WorkflowStep exceptionStep, Exception exception, Queue<ExecutionPointer> bubbleUpQueue)
+    {
+        var scope = new Stack<string>(exceptionPointer.Scope.Reverse());
+        scope.Push(exceptionPointer.Id);
+        ExecutionPointer compensationPointer = null;
 
-        public CompensateHandler(IExecutionPointerFactory pointerFactory, IDateTimeProvider datetimeProvider, WorkflowOptions options)
+        while (scope.Any())
         {
-            _pointerFactory = pointerFactory;
-            _datetimeProvider = datetimeProvider;
-            _options = options;
-        }
+            var pointerId = scope.Pop();
+            var scopePointer = workflow.ExecutionPointers.FindById(pointerId);
+            var scopeStep = def.Steps.FindById(scopePointer.StepId);
 
-        public void Handle(WorkflowInstance workflow, WorkflowDefinition def, ExecutionPointer exceptionPointer, WorkflowStep exceptionStep, Exception exception, Queue<ExecutionPointer> bubbleUpQueue)
-        {
-            var scope = new Stack<string>(exceptionPointer.Scope.Reverse());
-            scope.Push(exceptionPointer.Id);
-            ExecutionPointer compensationPointer = null;
-
-            while (scope.Any())
+            var resume = true;
+            var revert = false;
+            
+            var txnStack = new Stack<string>(scope.Reverse());
+            while (txnStack.Count > 0)
             {
-                var pointerId = scope.Pop();
-                var scopePointer = workflow.ExecutionPointers.FindById(pointerId);
-                var scopeStep = def.Steps.FindById(scopePointer.StepId);
-
-                var resume = true;
-                var revert = false;
-                
-                var txnStack = new Stack<string>(scope.Reverse());
-                while (txnStack.Count > 0)
+                var parentId = txnStack.Pop();
+                var parentPointer = workflow.ExecutionPointers.FindById(parentId);
+                var parentStep = def.Steps.FindById(parentPointer.StepId);
+                if ((!parentStep.ResumeChildrenAfterCompensation) || (parentStep.RevertChildrenAfterCompensation))
                 {
-                    var parentId = txnStack.Pop();
-                    var parentPointer = workflow.ExecutionPointers.FindById(parentId);
-                    var parentStep = def.Steps.FindById(parentPointer.StepId);
-                    if ((!parentStep.ResumeChildrenAfterCompensation) || (parentStep.RevertChildrenAfterCompensation))
-                    {
-                        resume = parentStep.ResumeChildrenAfterCompensation;
-                        revert = parentStep.RevertChildrenAfterCompensation;
-                        break;
-                    }
+                    resume = parentStep.ResumeChildrenAfterCompensation;
+                    revert = parentStep.RevertChildrenAfterCompensation;
+                    break;
                 }
+            }
 
-                if ((scopeStep.ErrorBehavior ?? WorkflowErrorHandling.Compensate) != WorkflowErrorHandling.Compensate)
+            if ((scopeStep.ErrorBehavior ?? WorkflowErrorHandling.Compensate) != WorkflowErrorHandling.Compensate)
+            {
+                bubbleUpQueue.Enqueue(scopePointer);
+                continue;
+            }
+
+            scopePointer.Active = false;
+            scopePointer.EndTime = _datetimeProvider.UtcNow;
+            scopePointer.Status = PointerStatus.Failed;
+
+            if (scopeStep.CompensationStepId.HasValue)
+            {
+                scopePointer.Status = PointerStatus.Compensated;
+
+                var nextCompensationPointer = _pointerFactory.BuildCompensationPointer(def, scopePointer, exceptionPointer, scopeStep.CompensationStepId.Value);
+                if (compensationPointer != null)
                 {
-                    bubbleUpQueue.Enqueue(scopePointer);
-                    continue;
+                    nextCompensationPointer.Active = false;
+                    nextCompensationPointer.Status = PointerStatus.PendingPredecessor;
+                    nextCompensationPointer.PredecessorId = compensationPointer.Id;                        
                 }
+                compensationPointer = nextCompensationPointer;
+                workflow.ExecutionPointers.Add(compensationPointer);
 
-                scopePointer.Active = false;
-                scopePointer.EndTime = _datetimeProvider.UtcNow;
-                scopePointer.Status = PointerStatus.Failed;
-
-                if (scopeStep.CompensationStepId.HasValue)
+                if (resume)
                 {
-                    scopePointer.Status = PointerStatus.Compensated;
-
-                    var nextCompensationPointer = _pointerFactory.BuildCompensationPointer(def, scopePointer, exceptionPointer, scopeStep.CompensationStepId.Value);
-                    if (compensationPointer != null)
-                    {
-                        nextCompensationPointer.Active = false;
-                        nextCompensationPointer.Status = PointerStatus.PendingPredecessor;
-                        nextCompensationPointer.PredecessorId = compensationPointer.Id;                        
-                    }
-                    compensationPointer = nextCompensationPointer;
-                    workflow.ExecutionPointers.Add(compensationPointer);
-
-                    if (resume)
-                    {
-                        foreach (var outcomeTarget in scopeStep.Outcomes.Where(x => x.Matches(workflow.Data)))
-                            workflow.ExecutionPointers.Add(_pointerFactory.BuildNextPointer(def, scopePointer, outcomeTarget));
-                    }
+                    foreach (var outcomeTarget in scopeStep.Outcomes.Where(x => x.Matches(workflow.Data)))
+                        workflow.ExecutionPointers.Add(_pointerFactory.BuildNextPointer(def, scopePointer, outcomeTarget));
                 }
+            }
 
-                if (revert)
+            if (revert)
+            {
+                var prevSiblings = workflow.ExecutionPointers
+                    .Where(x => scopePointer.Scope.SequenceEqual(x.Scope) && x.Id != scopePointer.Id && x.Status == PointerStatus.Complete)
+                    .OrderByDescending(x => x.EndTime)
+                    .ToList();
+
+                foreach (var siblingPointer in prevSiblings)
                 {
-                    var prevSiblings = workflow.ExecutionPointers
-                        .Where(x => scopePointer.Scope.SequenceEqual(x.Scope) && x.Id != scopePointer.Id && x.Status == PointerStatus.Complete)
-                        .OrderByDescending(x => x.EndTime)
-                        .ToList();
-
-                    foreach (var siblingPointer in prevSiblings)
+                    var siblingStep = def.Steps.FindById(siblingPointer.StepId);
+                    if (siblingStep.CompensationStepId.HasValue)
                     {
-                        var siblingStep = def.Steps.FindById(siblingPointer.StepId);
-                        if (siblingStep.CompensationStepId.HasValue)
+                        var nextCompensationPointer = _pointerFactory.BuildCompensationPointer(def, siblingPointer, exceptionPointer, siblingStep.CompensationStepId.Value);
+                        if (compensationPointer != null)
                         {
-                            var nextCompensationPointer = _pointerFactory.BuildCompensationPointer(def, siblingPointer, exceptionPointer, siblingStep.CompensationStepId.Value);
-                            if (compensationPointer != null)
-                            {
-                                nextCompensationPointer.Active = false;
-                                nextCompensationPointer.Status = PointerStatus.PendingPredecessor;
-                                nextCompensationPointer.PredecessorId = compensationPointer.Id;
-                                compensationPointer = nextCompensationPointer;
-                            }
-                            workflow.ExecutionPointers.Add(nextCompensationPointer);
-
-                            siblingPointer.Status = PointerStatus.Compensated;
+                            nextCompensationPointer.Active = false;
+                            nextCompensationPointer.Status = PointerStatus.PendingPredecessor;
+                            nextCompensationPointer.PredecessorId = compensationPointer.Id;
+                            compensationPointer = nextCompensationPointer;
                         }
+                        workflow.ExecutionPointers.Add(nextCompensationPointer);
+
+                        siblingPointer.Status = PointerStatus.Compensated;
                     }
                 }
             }

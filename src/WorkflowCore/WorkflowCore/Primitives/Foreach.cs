@@ -1,65 +1,63 @@
-﻿using System.Linq;
-using System.Collections;
-using System.Collections.Generic;
-using WorkflowCore.Interface;
+﻿using System.Collections;
 using WorkflowCore.Models;
+using WorkflowCore.Services;
 
-namespace WorkflowCore.Primitives
+namespace WorkflowCore.Primitives;
+
+public class Foreach : ContainerStepBody
 {
-    public class Foreach : ContainerStepBody
+    public IEnumerable Collection { get; set; }
+
+    public bool RunParallel { get; set; } = true;
+
+    public override ExecutionResult Run(IStepExecutionContext context)
     {
-        public IEnumerable Collection { get; set; }
-        public bool RunParallel { get; set; } = true;
-
-        public override ExecutionResult Run(IStepExecutionContext context)
+        if (context.PersistenceData == null)
         {
-            if (context.PersistenceData == null)
+            var values = Collection.Cast<object>().ToList();
+            if (values.Count == 0)
             {
-                var values = Collection.Cast<object>().ToList();
-                if (!values.Any())
-                {
-                    return ExecutionResult.Next();
-                }
-
-                if (RunParallel)
-                {
-                    return ExecutionResult.Branch(new List<object>(values), new IteratorPersistenceData { ChildrenActive = true });
-                }
-                else
-                {
-                    return ExecutionResult.Branch(new List<object>(new object[] { values.ElementAt(0) }), new IteratorPersistenceData { ChildrenActive = true });
-                }
+                return ExecutionResult.Next();
             }
 
-            if (context.PersistenceData is IteratorPersistenceData persistenceData && persistenceData?.ChildrenActive == true)
+            if (RunParallel)
             {
-                if (context.Workflow.IsBranchComplete(context.ExecutionPointer.Id))
-                {
-                    if (!RunParallel)
-                    {
-                        var values = Collection.Cast<object>();
-                        persistenceData.Index++;
-                        if (persistenceData.Index < values.Count())
-                        {
-                            return ExecutionResult.Branch(new List<object>(new object[] { values.ElementAt(persistenceData.Index) }), persistenceData);
-                        }
-                    }
-
-                    return ExecutionResult.Next();
-                }
-
-                return ExecutionResult.Persist(persistenceData);
+                return ExecutionResult.Branch([.. values], new IteratorPersistenceData { ChildrenActive = true });
             }
-
-            if (context.PersistenceData is ControlPersistenceData controlPersistenceData && controlPersistenceData?.ChildrenActive == true)
+            else
             {
-                if (context.Workflow.IsBranchComplete(context.ExecutionPointer.Id))
-                {
-                    return ExecutionResult.Next();
-                }
+                return ExecutionResult.Branch([values.ElementAt(0)], new IteratorPersistenceData { ChildrenActive = true });
             }
-
-            return ExecutionResult.Persist(context.PersistenceData);
         }
+
+        if (context.PersistenceData is IteratorPersistenceData persistenceData && persistenceData?.ChildrenActive == true)
+        {
+            if (context.Workflow.IsBranchComplete(context.ExecutionPointer.Id))
+            {
+                if (!RunParallel)
+                {
+                    var values = Collection.Cast<object>();
+                    persistenceData.Index++;
+                    if (persistenceData.Index < values.Count())
+                    {
+                        return ExecutionResult.Branch([values.ElementAt(persistenceData.Index)], persistenceData);
+                    }
+                }
+
+                return ExecutionResult.Next();
+            }
+
+            return ExecutionResult.Persist(persistenceData);
+        }
+
+        if (context.PersistenceData is ControlPersistenceData controlPersistenceData && controlPersistenceData?.ChildrenActive == true)
+        {
+            if (context.Workflow.IsBranchComplete(context.ExecutionPointer.Id))
+            {
+                return ExecutionResult.Next();
+            }
+        }
+
+        return ExecutionResult.Persist(context.PersistenceData);
     }
 }

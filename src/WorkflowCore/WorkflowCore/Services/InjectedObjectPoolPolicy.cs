@@ -1,26 +1,24 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.ObjectPool;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace WorkflowCore.Services
+namespace WorkflowCore.Services;
+
+internal class InjectedObjectPoolPolicy<T> : IPooledObjectPolicy<T>
 {
-    internal class InjectedObjectPoolPolicy<T> : IPooledObjectPolicy<T>
+    private readonly IServiceProvider _provider;
+
+    public InjectedObjectPoolPolicy(IServiceProvider provider)
     {
-        private readonly IServiceProvider _provider;
+        _provider = provider;
+    }
 
-        public InjectedObjectPoolPolicy(IServiceProvider provider)
-        {
-            _provider = provider;
-        }
+    public T Create()
+    {
+        return _provider.GetService<T>();
+    }
 
-        public T Create()
-        {
-            return _provider.GetService<T>();
-        }
-
-        public bool Return(T obj)
-        {
-            return true;
-        }
+    public bool Return(T obj)
+    {
+        return true;
     }
 }

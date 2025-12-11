@@ -1,41 +1,39 @@
-﻿using System;
-using System.Linq.Expressions;
-using WorkflowCore.Interface;
+﻿using System.Linq.Expressions;
+using WorkflowCore.Services;
 
-namespace WorkflowCore.Models
+namespace WorkflowCore.Models;
+
+public class ValueOutcome : IStepOutcome
 {
-    public class ValueOutcome : IStepOutcome
+    private LambdaExpression _value;
+
+    public LambdaExpression Value
     {
-        private LambdaExpression _value;
+        set => _value = value;
+    }
 
-        public LambdaExpression Value
+    public int NextStep { get; set; }
+
+    public string Label { get; set; }
+
+    public string ExternalNextStepId { get; set; }
+
+    public bool Matches(ExecutionResult executionResult, object data)
+    {
+        return object.Equals(GetValue(data), executionResult.OutcomeValue) || GetValue(data) == null;
+    }
+
+    public bool Matches(object data)
+    {
+        return GetValue(data) == null;
+    }
+
+    public object GetValue(object data)
+    {
+        if (_value == null)
         {
-            set { _value = value; }
+            return null;
         }
-
-        public int NextStep { get; set; }
-
-        public string Label { get; set; }
-
-        public string ExternalNextStepId { get; set; }
-
-        public bool Matches(ExecutionResult executionResult, object data)
-        {
-            return object.Equals(GetValue(data), executionResult.OutcomeValue) || GetValue(data) == null;
-        }
-
-        public bool Matches(object data)
-        {
-            return GetValue(data) == null;
-        }
-
-        public object GetValue(object data)
-        {
-            if (_value == null)
-                return null;
-
-            return _value.Compile().DynamicInvoke(data);
-        }
-                
+        return _value.Compile().DynamicInvoke(data);
     }
 }

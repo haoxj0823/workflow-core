@@ -1,10 +1,7 @@
-﻿using System.Linq;
-using WorkflowCore.Models;
+﻿using WorkflowCore.Models;
 
-namespace WorkflowCore.Primitives
+namespace WorkflowCore.Primitives;
+
+public abstract class ContainerStepBody : StepBody
 {
-    public abstract class ContainerStepBody : StepBody
-    {
-        
-    }
 }

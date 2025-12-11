@@ -1,8 +1,5 @@
-﻿using System;
+﻿namespace WorkflowCore.Models.LifeCycleEvents;
 
-namespace WorkflowCore.Models.LifeCycleEvents
+public class WorkflowCompleted : LifeCycleEvent
 {
-    public class WorkflowCompleted : LifeCycleEvent
-    {
-    }
 }

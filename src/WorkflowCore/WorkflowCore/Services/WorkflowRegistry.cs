@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using WorkflowCore.Interface;
 using WorkflowCore.Models;
 
 namespace WorkflowCore.Services;

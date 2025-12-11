@@ -1,44 +1,41 @@
-﻿using System;
-using System.Threading.Tasks;
-using WorkflowCore.Interface;
+﻿using WorkflowCore.Services;
 
-namespace WorkflowCore.Models
+namespace WorkflowCore.Models;
+
+public abstract class StepBody : IStepBody
 {
-    public abstract class StepBody : IStepBody
+    public abstract ExecutionResult Run(IStepExecutionContext context);
+
+    public Task<ExecutionResult> RunAsync(IStepExecutionContext context)
     {
-        public abstract ExecutionResult Run(IStepExecutionContext context);
+        return Task.FromResult(Run(context));
+    }        
 
-        public Task<ExecutionResult> RunAsync(IStepExecutionContext context)
+    protected ExecutionResult OutcomeResult(object value)
+    {
+        return new ExecutionResult
         {
-            return Task.FromResult(Run(context));
-        }        
+            Proceed = true,
+            OutcomeValue = value
+        };
+    }
 
-        protected ExecutionResult OutcomeResult(object value)
+    protected ExecutionResult PersistResult(object persistenceData)
+    {
+        return new ExecutionResult
         {
-            return new ExecutionResult
-            {
-                Proceed = true,
-                OutcomeValue = value
-            };
-        }
+            Proceed = false,
+            PersistenceData = persistenceData
+        };
+    }
 
-        protected ExecutionResult PersistResult(object persistenceData)
+    protected ExecutionResult SleepResult(object persistenceData, TimeSpan sleep)
+    {
+        return new ExecutionResult
         {
-            return new ExecutionResult
-            {
-                Proceed = false,
-                PersistenceData = persistenceData
-            };
-        }
-
-        protected ExecutionResult SleepResult(object persistenceData, TimeSpan sleep)
-        {
-            return new ExecutionResult
-            {
-                Proceed = false,
-                PersistenceData = persistenceData,
-                SleepFor = sleep
-            };
-        }
+            Proceed = false,
+            PersistenceData = persistenceData,
+            SleepFor = sleep
+        };
     }
 }

@@ -1,10 +1,8 @@
-﻿using System.Threading.Tasks;
-using WorkflowCore.Interface;
+﻿using WorkflowCore.Services;
 
-namespace WorkflowCore.Models
+namespace WorkflowCore.Models;
+
+public abstract class StepBodyAsync : IStepBody
 {
-    public abstract class StepBodyAsync : IStepBody
-    {
-        public abstract Task<ExecutionResult> RunAsync(IStepExecutionContext context);
-    }
+    public abstract Task<ExecutionResult> RunAsync(IStepExecutionContext context);
 }

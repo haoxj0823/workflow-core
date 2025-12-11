@@ -1,6 +1,4 @@
-﻿using WorkflowCore.Interface;
-
-namespace WorkflowCore.Services;
+﻿namespace WorkflowCore.Services;
 
 public class DateTimeProvider : IDateTimeProvider
 {

@@ -1,11 +1,8 @@
-﻿using System;
+﻿namespace WorkflowCore.Models.LifeCycleEvents;
 
-namespace WorkflowCore.Models.LifeCycleEvents
+public class StepStarted : LifeCycleEvent
 {
-    public class StepStarted : LifeCycleEvent
-    {
-        public string ExecutionPointerId { get; set; }
+    public string ExecutionPointerId { get; set; }
 
-        public int StepId { get; set; }
-    }
+    public int StepId { get; set; }
 }

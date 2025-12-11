@@ -1,8 +1,8 @@
-using Newtonsoft.Json;
 using System.Text;
+using System.Text.Json;
 using WorkflowCore.Exceptions;
-using WorkflowCore.Interface;
 using WorkflowCore.Models;
+using WorkflowCore.Services.Persistence;
 
 namespace WorkflowCore.Services;
 
@@ -14,9 +14,9 @@ public class ActivityController : IActivityController
     private readonly IWorkflowController _workflowController;
 
     public ActivityController(
-        ISubscriptionRepository subscriptionRepository, 
-        IWorkflowController workflowController, 
-        IDateTimeProvider dateTimeProvider, 
+        ISubscriptionRepository subscriptionRepository,
+        IWorkflowController workflowController,
+        IDateTimeProvider dateTimeProvider,
         IDistributedLockProvider lockProvider)
     {
         _subscriptionRepository = subscriptionRepository;
@@ -24,7 +24,7 @@ public class ActivityController : IActivityController
         _lockProvider = lockProvider;
         _workflowController = workflowController;
     }
-    
+
     public async Task<PendingActivity> GetPendingActivity(string activityName, string workerId, TimeSpan? timeout = null)
     {
         var endTime = _dateTimeProvider.UtcNow.Add(timeout ?? TimeSpan.Zero);
@@ -33,16 +33,27 @@ public class ActivityController : IActivityController
         while ((subscription == null && _dateTimeProvider.UtcNow < endTime) || firstPass)
         {
             if (!firstPass)
+            {
                 await Task.Delay(100);
+            }
+
             subscription = await _subscriptionRepository.GetFirstOpenSubscription(Event.EventTypeActivity, activityName, _dateTimeProvider.UtcNow);
             if (subscription != null)
+            {
                 if (!await _lockProvider.AcquireLock($"sub:{subscription.Id}", CancellationToken.None))
+                {
                     subscription = null;
+                }
+            }
+
             firstPass = false;
         }
+
         if (subscription == null)
+        {
             return null;
-        
+        }
+
         try
         {
             var token = Token.Create(subscription.Id, subscription.EventKey);
@@ -55,7 +66,9 @@ public class ActivityController : IActivityController
             };
 
             if (!await _subscriptionRepository.SetSubscriptionToken(subscription.Id, result.Token, workerId, result.TokenExpiry))
+            {
                 return null;
+            }
 
             return result;
         }
@@ -95,11 +108,15 @@ public class ActivityController : IActivityController
         var tokenObj = Token.Decode(token);
         var sub = await _subscriptionRepository.GetSubscription(tokenObj.SubscriptionId);
         if (sub == null)
+        {
             throw new NotFoundException();
+        }
 
         if (sub.ExternalToken != token)
+        {
             throw new NotFoundException("Token mismatch");
-        
+        }
+
         result.SubscriptionId = sub.Id;
 
         await _workflowController.PublishEvent(sub.EventName, sub.EventKey, result);
@@ -108,12 +125,14 @@ public class ActivityController : IActivityController
     class Token
     {
         public string SubscriptionId { get; set; }
+
         public string ActivityName { get; set; }
+
         public string Nonce { get; set; }
 
         public string Encode()
         {
-            var json = JsonConvert.SerializeObject(this);
+            var json = JsonSerializer.Serialize(this);
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
         }
 
@@ -131,7 +150,7 @@ public class ActivityController : IActivityController
         {
             var raw = Convert.FromBase64String(encodedToken);
             var json = Encoding.UTF8.GetString(raw);
-            return JsonConvert.DeserializeObject<Token>(json);
+            return JsonSerializer.Deserialize<Token>(json);
         }
     }
 }

@@ -1,16 +1,14 @@
-﻿using System;
-using WorkflowCore.Interface;
-using WorkflowCore.Models;
+﻿using WorkflowCore.Models;
+using WorkflowCore.Services;
 
-namespace WorkflowCore.Primitives
+namespace WorkflowCore.Primitives;
+
+public class Decide : StepBody
 {
-    public class Decide : StepBody
-    {
-        public object Expression { get; set; }
+    public object Expression { get; set; }
 
-        public override ExecutionResult Run(IStepExecutionContext context)
-        {
-            return ExecutionResult.Outcome(Expression);
-        }
+    public override ExecutionResult Run(IStepExecutionContext context)
+    {
+        return ExecutionResult.Outcome(Expression);
     }
 }
