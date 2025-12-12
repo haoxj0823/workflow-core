@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using WorkflowCore.Models;
 using WorkflowCore.Services.LifeCycleEvents;
-using WorkflowCore.Services.Persistences;
+using WorkflowCore.Services.Persistence;
 
 namespace WorkflowCore.Services;
 

@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using WorkflowCore.Models;
-using WorkflowCore.Services.Builders;
+using WorkflowCore.Services.FluentBuilders;
 
 namespace WorkflowCore.Services;
 

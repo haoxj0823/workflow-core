@@ -1,11 +1,13 @@
-﻿using Microsoft.Extensions.ObjectPool;
-using WorkflowCore.Models;
+﻿using WorkflowCore.Models;
 using WorkflowCore.Primitives;
 using WorkflowCore.Services;
-using WorkflowCore.Services.Builders;
 using WorkflowCore.Services.ErrorHandlers;
+using WorkflowCore.Services.Executors;
+using WorkflowCore.Services.FluentBuilders;
 using WorkflowCore.Services.LifeCycleEvents;
-using WorkflowCore.Services.Persistences;
+using WorkflowCore.Services.Middleware;
+using WorkflowCore.Services.Persistence;
+using WorkflowCore.Services.Processors;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -47,9 +49,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDateTimeProvider, DateTimeProvider>();
         services.AddTransient<IExecutionResultProcessor, ExecutionResultProcessor>();
         services.AddTransient<IExecutionPointerFactory, ExecutionPointerFactory>();
-
-        services.AddTransient<IPooledObjectPolicy<IPersistenceProvider>, InjectedObjectPoolPolicy<IPersistenceProvider>>();
-        services.AddTransient<IPooledObjectPolicy<IWorkflowExecutor>, InjectedObjectPoolPolicy<IWorkflowExecutor>>();
 
         services.AddTransient<ISyncWorkflowRunner, SyncWorkflowRunner>();
 

@@ -8,6 +8,7 @@ public class TerminateHandler : IWorkflowErrorHandler
 {
     private readonly ILifeCycleEventPublisher _eventPublisher;
     private readonly IDateTimeProvider _dateTimeProvider;
+
     public WorkflowErrorHandling Type => WorkflowErrorHandling.Terminate;
 
     public TerminateHandler(ILifeCycleEventPublisher eventPublisher, IDateTimeProvider dateTimeProvider)

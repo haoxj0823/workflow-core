@@ -13,12 +13,15 @@ public class LifeCycleEventPublisher : ILifeCycleEventPublisher, IDisposable
     private BlockingCollection<LifeCycleEvent> _outbox;
     private Task _dispatchTask;
 
-    public LifeCycleEventPublisher(ILifeCycleEventHub eventHub, WorkflowOptions workflowOptions, ILogger<LifeCycleEventPublisher> logger)
+    public LifeCycleEventPublisher(
+        ILifeCycleEventHub eventHub,
+        WorkflowOptions workflowOptions,
+        ILogger<LifeCycleEventPublisher> logger)
     {
         _eventHub = eventHub;
         _workflowOptions = workflowOptions;
-        _outbox = [];
         _logger = logger;
+        _outbox = [];
     }
 
     public void PublishNotification(LifeCycleEvent evt)

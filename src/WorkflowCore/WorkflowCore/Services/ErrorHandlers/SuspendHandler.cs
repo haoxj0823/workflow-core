@@ -8,6 +8,7 @@ public class SuspendHandler : IWorkflowErrorHandler
 {
     private readonly ILifeCycleEventPublisher _eventPublisher;
     private readonly IDateTimeProvider _datetimeProvider;
+
     public WorkflowErrorHandling Type => WorkflowErrorHandling.Suspend;
 
     public SuspendHandler(ILifeCycleEventPublisher eventPublisher, IDateTimeProvider datetimeProvider)

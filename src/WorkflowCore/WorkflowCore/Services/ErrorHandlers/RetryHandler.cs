@@ -6,6 +6,7 @@ public class RetryHandler : IWorkflowErrorHandler
 {
     private readonly IDateTimeProvider _datetimeProvider;
     private readonly WorkflowOptions _options;
+
     public WorkflowErrorHandling Type => WorkflowErrorHandling.Retry;
 
     public RetryHandler(IDateTimeProvider datetimeProvider, WorkflowOptions options)

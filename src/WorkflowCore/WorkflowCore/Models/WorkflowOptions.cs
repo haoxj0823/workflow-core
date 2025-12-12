@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using WorkflowCore.Services;
 using WorkflowCore.Services.LifeCycleEvents;
-using WorkflowCore.Services.Persistences;
+using WorkflowCore.Services.Persistence;
 
 namespace WorkflowCore.Models;
 
@@ -33,7 +33,7 @@ public class WorkflowOptions
 
         LockFactory = new Func<IServiceProvider, IDistributedLockProvider>(sp => new SingleNodeLockProvider());
         PersistenceFactory = new Func<IServiceProvider, IPersistenceProvider>(sp => new TransientMemoryPersistenceProvider(sp.GetService<ISingletonMemoryProvider>()));
-        EventHubFactory = new Func<IServiceProvider, ILifeCycleEventHub>(sp => new SingleNodeEventHub(sp.GetService<ILoggerFactory>()));
+        EventHubFactory = new Func<IServiceProvider, ILifeCycleEventHub>(sp => new SingleNodeEventHub(sp.GetService<ILogger<SingleNodeEventHub>>()));
     }
 
     public bool EnableWorkflows { get; set; } = true;

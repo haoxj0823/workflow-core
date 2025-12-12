@@ -1,12 +1,12 @@
 using WorkflowCore.Exceptions;
 using WorkflowCore.Models;
-using WorkflowCore.Services.Persistences;
+using WorkflowCore.Services.Executors;
+using WorkflowCore.Services.Persistence;
 
 namespace WorkflowCore.Services;
 
 public class SyncWorkflowRunner : ISyncWorkflowRunner
 {
-    private readonly IWorkflowHost _host;
     private readonly IWorkflowExecutor _executor;
     private readonly IDistributedLockProvider _lockService;
     private readonly IWorkflowRegistry _registry;
@@ -15,7 +15,6 @@ public class SyncWorkflowRunner : ISyncWorkflowRunner
     private readonly IDateTimeProvider _dateTimeProvider;
 
     public SyncWorkflowRunner(
-        IWorkflowHost host,
         IWorkflowExecutor executor,
         IDistributedLockProvider lockService,
         IWorkflowRegistry registry,
@@ -23,7 +22,6 @@ public class SyncWorkflowRunner : ISyncWorkflowRunner
         IExecutionPointerFactory pointerFactory,
         IDateTimeProvider dateTimeProvider)
     {
-        _host = host;
         _executor = executor;
         _lockService = lockService;
         _registry = registry;
@@ -35,8 +33,7 @@ public class SyncWorkflowRunner : ISyncWorkflowRunner
     public Task<WorkflowInstance> RunWorkflowSync<TData>(string workflowId, int version, TData data, string reference, TimeSpan timeOut, bool persistSate = true)
         where TData : new()
     {
-        return RunWorkflowSync(workflowId, version, data, reference, new CancellationTokenSource(timeOut).Token,
-            persistSate);
+        return RunWorkflowSync(workflowId, version, data, reference, new CancellationTokenSource(timeOut).Token, persistSate);
     }
 
     public async Task<WorkflowInstance> RunWorkflowSync<TData>(string workflowId, int version, TData data, string reference, CancellationToken token, bool persistSate = true)

@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using WorkflowCore.Models;
 using WorkflowCore.Primitives;
-using WorkflowCore.Services.Builders;
+using WorkflowCore.Services.FluentBuilders;
 
 namespace WorkflowCore.Services;
 

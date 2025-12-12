@@ -5,12 +5,12 @@ namespace WorkflowCore.Services.LifeCycleEvents;
 
 public class SingleNodeEventHub : ILifeCycleEventHub
 {
-    private ICollection<Action<LifeCycleEvent>> _subscribers = new HashSet<Action<LifeCycleEvent>>();
-    private readonly ILogger _logger;
+    private readonly ICollection<Action<LifeCycleEvent>> _subscribers = [];
+    private readonly ILogger<SingleNodeEventHub> _logger;
 
-    public SingleNodeEventHub(ILoggerFactory loggerFactory)
+    public SingleNodeEventHub(ILogger<SingleNodeEventHub> logger)
     {
-        _logger = loggerFactory.CreateLogger<SingleNodeEventHub>();
+        _logger = logger;
     }
 
     public Task PublishNotification(LifeCycleEvent evt)

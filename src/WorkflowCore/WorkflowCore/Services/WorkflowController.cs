@@ -4,7 +4,8 @@ using WorkflowCore.Exceptions;
 using WorkflowCore.Models;
 using WorkflowCore.Models.LifeCycleEvents;
 using WorkflowCore.Services.LifeCycleEvents;
-using WorkflowCore.Services.Persistences;
+using WorkflowCore.Services.Middleware;
+using WorkflowCore.Services.Persistence;
 
 namespace WorkflowCore.Services;
 
