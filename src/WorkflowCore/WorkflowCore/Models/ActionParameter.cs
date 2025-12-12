@@ -1,6 +1,4 @@
-﻿using WorkflowCore.Services;
-
-namespace WorkflowCore.Models;
+﻿namespace WorkflowCore.Models;
 
 public class ActionParameter<TStepBody, TData> : IStepParameter
 {

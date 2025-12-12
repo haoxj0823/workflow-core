@@ -38,7 +38,7 @@ public class CompensateHandler : IWorkflowErrorHandler
                 var parentId = txnStack.Pop();
                 var parentPointer = workflow.ExecutionPointers.FindById(parentId);
                 var parentStep = def.Steps.FindById(parentPointer.StepId);
-                if ((!parentStep.ResumeChildrenAfterCompensation) || (parentStep.RevertChildrenAfterCompensation))
+                if (!parentStep.ResumeChildrenAfterCompensation || parentStep.RevertChildrenAfterCompensation)
                 {
                     resume = parentStep.ResumeChildrenAfterCompensation;
                     revert = parentStep.RevertChildrenAfterCompensation;

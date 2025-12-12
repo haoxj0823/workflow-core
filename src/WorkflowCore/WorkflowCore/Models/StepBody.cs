@@ -1,6 +1,4 @@
-﻿using WorkflowCore.Services;
-
-namespace WorkflowCore.Models;
+﻿namespace WorkflowCore.Models;
 
 public abstract class StepBody : IStepBody
 {

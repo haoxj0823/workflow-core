@@ -3,7 +3,8 @@ using Microsoft.Extensions.Logging;
 using WorkflowCore.Exceptions;
 using WorkflowCore.Models;
 using WorkflowCore.Models.LifeCycleEvents;
-using WorkflowCore.Services.Persistence;
+using WorkflowCore.Services.LifeCycleEvents;
+using WorkflowCore.Services.Persistences;
 
 namespace WorkflowCore.Services;
 
@@ -96,7 +97,7 @@ public class WorkflowController : IWorkflowController
             await middlewareRunner.RunPreMiddlewareAsync(wf, def);
         }
 
-        string id = await _persistenceStore.CreateNewWorkflow(wf);
+        string id = await _persistenceStore.CreateNewWorkflowAsync(wf);
         //await _queueProvider.QueueWork(id, QueueType.Workflow);
         await _eventHub.PublishNotification(new WorkflowStarted
         {
@@ -129,7 +130,7 @@ public class WorkflowController : IWorkflowController
         evt.EventName = eventName;
         evt.IsProcessed = false;
 
-        var eventId = await _persistenceStore.CreateEvent(evt);
+        var eventId = await _persistenceStore.CreateEventAsync(evt);
 
         //await _queueProvider.QueueWork(eventId, QueueType.Event);
     }
@@ -143,11 +144,11 @@ public class WorkflowController : IWorkflowController
 
         try
         {
-            var wf = await _persistenceStore.GetWorkflowInstance(workflowId);
+            var wf = await _persistenceStore.GetWorkflowInstanceAsync(workflowId);
             if (wf.Status == WorkflowStatus.Runnable)
             {
                 wf.Status = WorkflowStatus.Suspended;
-                await _persistenceStore.PersistWorkflow(wf);
+                await _persistenceStore.PersistWorkflowAsync(wf);
                 await _eventHub.PublishNotification(new WorkflowSuspended
                 {
                     EventTimeUtc = _dateTimeProvider.UtcNow,
@@ -177,11 +178,11 @@ public class WorkflowController : IWorkflowController
         bool requeue = false;
         try
         {
-            var wf = await _persistenceStore.GetWorkflowInstance(workflowId);
+            var wf = await _persistenceStore.GetWorkflowInstanceAsync(workflowId);
             if (wf.Status == WorkflowStatus.Suspended)
             {
                 wf.Status = WorkflowStatus.Runnable;
-                await _persistenceStore.PersistWorkflow(wf);
+                await _persistenceStore.PersistWorkflowAsync(wf);
                 requeue = true;
                 await _eventHub.PublishNotification(new WorkflowResumed
                 {
@@ -215,12 +216,12 @@ public class WorkflowController : IWorkflowController
 
         try
         {
-            var wf = await _persistenceStore.GetWorkflowInstance(workflowId);
+            var wf = await _persistenceStore.GetWorkflowInstanceAsync(workflowId);
 
             wf.Status = WorkflowStatus.Terminated;
             wf.CompleteTime = _dateTimeProvider.UtcNow;
 
-            await _persistenceStore.PersistWorkflow(wf);
+            await _persistenceStore.PersistWorkflowAsync(wf);
             await _eventHub.PublishNotification(new WorkflowTerminated
             {
                 EventTimeUtc = _dateTimeProvider.UtcNow,

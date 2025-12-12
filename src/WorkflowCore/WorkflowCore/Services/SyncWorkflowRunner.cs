@@ -1,6 +1,6 @@
 using WorkflowCore.Exceptions;
 using WorkflowCore.Models;
-using WorkflowCore.Services.Persistence;
+using WorkflowCore.Services.Persistences;
 
 namespace WorkflowCore.Services;
 
@@ -78,7 +78,7 @@ public class SyncWorkflowRunner : ISyncWorkflowRunner
 
         if (persistSate)
         {
-            id = await _persistenceStore.CreateNewWorkflow(wf, token);
+            id = await _persistenceStore.CreateNewWorkflowAsync(wf, token);
         }
         else
         {
@@ -99,7 +99,7 @@ public class SyncWorkflowRunner : ISyncWorkflowRunner
                 await _executor.Execute(wf, token);
                 if (persistSate)
                 {
-                    await _persistenceStore.PersistWorkflow(wf, token);
+                    await _persistenceStore.PersistWorkflowAsync(wf, token);
                 }
             }
         }

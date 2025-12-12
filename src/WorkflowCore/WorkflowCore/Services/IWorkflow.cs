@@ -1,4 +1,6 @@
-﻿namespace WorkflowCore.Services;
+﻿using WorkflowCore.Services.Builders;
+
+namespace WorkflowCore.Services;
 
 public interface IWorkflow<TData>
     where TData : new()

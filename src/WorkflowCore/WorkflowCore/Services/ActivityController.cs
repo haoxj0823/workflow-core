@@ -1,8 +1,8 @@
+using Newtonsoft.Json;
 using System.Text;
-using System.Text.Json;
 using WorkflowCore.Exceptions;
 using WorkflowCore.Models;
-using WorkflowCore.Services.Persistence;
+using WorkflowCore.Services.Persistences;
 
 namespace WorkflowCore.Services;
 
@@ -37,7 +37,7 @@ public class ActivityController : IActivityController
                 await Task.Delay(100);
             }
 
-            subscription = await _subscriptionRepository.GetFirstOpenSubscription(Event.EventTypeActivity, activityName, _dateTimeProvider.UtcNow);
+            subscription = await _subscriptionRepository.GetFirstOpenSubscriptionAsync(Event.EventTypeActivity, activityName, _dateTimeProvider.UtcNow);
             if (subscription != null)
             {
                 if (!await _lockProvider.AcquireLock($"sub:{subscription.Id}", CancellationToken.None))
@@ -65,7 +65,7 @@ public class ActivityController : IActivityController
                 TokenExpiry = new DateTime(DateTime.MaxValue.Ticks, DateTimeKind.Utc)
             };
 
-            if (!await _subscriptionRepository.SetSubscriptionToken(subscription.Id, result.Token, workerId, result.TokenExpiry))
+            if (!await _subscriptionRepository.SetSubscriptionTokenAsync(subscription.Id, result.Token, workerId, result.TokenExpiry))
             {
                 return null;
             }
@@ -76,13 +76,12 @@ public class ActivityController : IActivityController
         {
             await _lockProvider.ReleaseLock($"sub:{subscription.Id}");
         }
-
     }
 
     public async Task ReleaseActivityToken(string token)
     {
         var tokenObj = Token.Decode(token);
-        await _subscriptionRepository.ClearSubscriptionToken(tokenObj.SubscriptionId, token);
+        await _subscriptionRepository.ClearSubscriptionTokenAsync(tokenObj.SubscriptionId, token);
     }
 
     public async Task SubmitActivitySuccess(string token, object result)
@@ -106,7 +105,7 @@ public class ActivityController : IActivityController
     private async Task SubmitActivityResult(string token, ActivityResult result)
     {
         var tokenObj = Token.Decode(token);
-        var sub = await _subscriptionRepository.GetSubscription(tokenObj.SubscriptionId);
+        var sub = await _subscriptionRepository.GetSubscriptionAsync(tokenObj.SubscriptionId);
         if (sub == null)
         {
             throw new NotFoundException();
@@ -132,7 +131,7 @@ public class ActivityController : IActivityController
 
         public string Encode()
         {
-            var json = JsonSerializer.Serialize(this);
+            var json = JsonConvert.SerializeObject(this);
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
         }
 
@@ -150,7 +149,7 @@ public class ActivityController : IActivityController
         {
             var raw = Convert.FromBase64String(encodedToken);
             var json = Encoding.UTF8.GetString(raw);
-            return JsonSerializer.Deserialize<Token>(json);
+            return JsonConvert.DeserializeObject<Token>(json);
         }
     }
 }

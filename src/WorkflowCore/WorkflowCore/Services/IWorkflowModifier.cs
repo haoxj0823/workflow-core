@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using WorkflowCore.Models;
 using WorkflowCore.Primitives;
+using WorkflowCore.Services.Builders;
 
 namespace WorkflowCore.Services;
 
@@ -44,7 +45,7 @@ public interface IWorkflowModifier<TData, TStepBody>
     /// <param name="eventName">The name used to identify the kind of event to wait for</param>
     /// <param name="eventKey">A specific key value within the context of the event to wait for</param>
     /// <param name="effectiveDate">Listen for events as of this effective date</param>
-    /// <param name="cancelCondition">A conditon that when true will cancel this WaitFor</param>
+    /// <param name="cancelCondition">A condition that when true will cancel this WaitFor</param>
     /// <returns></returns>
     IStepBuilder<TData, WaitFor> WaitFor(string eventName, Expression<Func<TData, string>> eventKey,
         Expression<Func<TData, DateTime?>> effectiveDate = null, Expression<Func<TData, bool>> cancelCondition = null);
@@ -55,7 +56,7 @@ public interface IWorkflowModifier<TData, TStepBody>
     /// <param name="eventName">The name used to identify the kind of event to wait for</param>
     /// <param name="eventKey">A specific key value within the context of the event to wait for</param>
     /// <param name="effectiveDate">Listen for events as of this effective date</param>
-    /// <param name="cancelCondition">A conditon that when true will cancel this WaitFor</param>
+    /// <param name="cancelCondition">A condition that when true will cancel this WaitFor</param>
     /// <returns></returns>
     IStepBuilder<TData, WaitFor> WaitFor(string eventName,
         Expression<Func<TData, IStepExecutionContext, string>> eventKey,
@@ -166,7 +167,7 @@ public interface IWorkflowModifier<TData, TStepBody>
     /// <param name="activityName">The name used to identify the activity to wait for</param>
     /// <param name="parameters">The data to pass the external activity worker</param>
     /// <param name="effectiveDate">Listen for events as of this effective date</param>
-    /// <param name="cancelCondition">A conditon that when true will cancel this WaitFor</param>
+    /// <param name="cancelCondition">A condition that when true will cancel this WaitFor</param>
     /// <returns></returns>
     IStepBuilder<TData, Activity> Activity(string activityName, Expression<Func<TData, object>> parameters = null,
         Expression<Func<TData, DateTime?>> effectiveDate = null, Expression<Func<TData, bool>> cancelCondition = null);
@@ -177,7 +178,7 @@ public interface IWorkflowModifier<TData, TStepBody>
     /// <param name="activityName">The name used to identify the activity to wait for</param>
     /// <param name="parameters">The data to pass the external activity worker</param>
     /// <param name="effectiveDate">Listen for events as of this effective date</param>
-    /// <param name="cancelCondition">A conditon that when true will cancel this WaitFor</param>
+    /// <param name="cancelCondition">A condition that when true will cancel this WaitFor</param>
     /// <returns></returns>
     IStepBuilder<TData, Activity> Activity(Expression<Func<TData, IStepExecutionContext, string>> activityName, Expression<Func<TData, object>> parameters = null,
         Expression<Func<TData, DateTime?>> effectiveDate = null, Expression<Func<TData, bool>> cancelCondition = null);

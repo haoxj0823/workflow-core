@@ -1,5 +1,6 @@
 using WorkflowCore.Models;
 using WorkflowCore.Models.LifeCycleEvents;
+using WorkflowCore.Services.LifeCycleEvents;
 
 namespace WorkflowCore.Services.ErrorHandlers;
 

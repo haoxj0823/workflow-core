@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WorkflowCore.Services;
-using WorkflowCore.Services.Persistence;
+using WorkflowCore.Services.LifeCycleEvents;
+using WorkflowCore.Services.Persistences;
 
 namespace WorkflowCore.Models;
 

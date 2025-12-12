@@ -25,7 +25,6 @@ internal static class WorkflowActivity
         return activity;
     }
 
-
     internal static DiagnosticsActivity StartPoll(string type)
     {
         var activityName = $"workflow poll {type}";
@@ -47,7 +46,6 @@ internal static class WorkflowActivity
             activity.SetTag("workflow.status", workflow.Status);
         }
     }
-
 
     internal static void Enrich(WorkflowStep workflowStep)
     {

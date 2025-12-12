@@ -4,7 +4,7 @@ using WorkflowCore.Models;
 using WorkflowCore.Persistence.EntityFramework.Services;
 using WorkflowCore.Persistence.SqlServer;
 using WorkflowCore.Services;
-using WorkflowCore.Services.Persistence;
+using WorkflowCore.Services.Persistences;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

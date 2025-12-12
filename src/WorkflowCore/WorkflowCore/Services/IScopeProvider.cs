@@ -1,9 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using WorkflowCore.Models;
 
 namespace WorkflowCore.Services;
 
 /// <remarks>
-/// The implemention of this interface will be responsible for
+/// The implementation of this interface will be responsible for
 /// providing a new service scope for a DI container   
 /// </remarks>
 public interface IScopeProvider

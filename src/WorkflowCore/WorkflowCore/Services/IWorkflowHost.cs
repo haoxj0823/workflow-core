@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using WorkflowCore.Models;
-using WorkflowCore.Services.Persistence;
+using WorkflowCore.Services.LifeCycleEvents;
+using WorkflowCore.Services.Persistences;
 
 namespace WorkflowCore.Services;
 
