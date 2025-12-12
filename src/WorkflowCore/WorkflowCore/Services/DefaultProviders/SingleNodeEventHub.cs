@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using WorkflowCore.Models.LifeCycleEvents;
+using WorkflowCore.Services.LifeCycleEvents;
 
-namespace WorkflowCore.Services.LifeCycleEvents;
+namespace WorkflowCore.Services.DefaultProviders;
 
 public class SingleNodeEventHub : ILifeCycleEventHub
 {

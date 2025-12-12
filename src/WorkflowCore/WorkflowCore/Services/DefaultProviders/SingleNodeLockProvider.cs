@@ -1,4 +1,4 @@
-﻿namespace WorkflowCore.Services;
+﻿namespace WorkflowCore.Services.DefaultProviders;
 
 public class SingleNodeLockProvider : IDistributedLockProvider
 {

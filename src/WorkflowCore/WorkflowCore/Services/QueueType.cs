@@ -3,6 +3,5 @@
 public enum QueueType
 {
     Workflow = 0,
-    Event = 1,
-    Index = 2
+    Event = 1
 }

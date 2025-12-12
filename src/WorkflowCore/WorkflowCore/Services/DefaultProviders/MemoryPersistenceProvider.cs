@@ -1,6 +1,7 @@
 ﻿using WorkflowCore.Models;
+using WorkflowCore.Services.Persistence;
 
-namespace WorkflowCore.Services.Persistence;
+namespace WorkflowCore.Services.DefaultProviders;
 
 public class MemoryPersistenceProvider : ISingletonMemoryProvider
 {

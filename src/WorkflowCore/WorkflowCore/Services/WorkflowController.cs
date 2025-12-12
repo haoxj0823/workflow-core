@@ -15,6 +15,7 @@ public class WorkflowController : IWorkflowController
     private readonly IDistributedLockProvider _lockProvider;
     private readonly IWorkflowRegistry _registry;
     private readonly IExecutionPointerFactory _pointerFactory;
+    private readonly IQueueProvider _queueProvider;
     private readonly ILifeCycleEventHub _eventHub;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger _logger;
@@ -25,6 +26,7 @@ public class WorkflowController : IWorkflowController
         IDistributedLockProvider lockProvider,
         IWorkflowRegistry registry,
         IExecutionPointerFactory pointerFactory,
+        IQueueProvider queueProvider,
         ILifeCycleEventHub eventHub,
         ILoggerFactory loggerFactory,
         IServiceProvider serviceProvider,
@@ -34,6 +36,7 @@ public class WorkflowController : IWorkflowController
         _lockProvider = lockProvider;
         _registry = registry;
         _pointerFactory = pointerFactory;
+        _queueProvider = queueProvider;
         _eventHub = eventHub;
         _serviceProvider = serviceProvider;
         _logger = loggerFactory.CreateLogger<WorkflowController>();
@@ -59,7 +62,6 @@ public class WorkflowController : IWorkflowController
     public async Task<string> StartWorkflow<TData>(string workflowId, int? version, TData data = null, string reference = null)
         where TData : class, new()
     {
-
         var def = _registry.GetDefinition(workflowId, version);
         if (def == null)
         {
@@ -99,7 +101,7 @@ public class WorkflowController : IWorkflowController
         }
 
         string id = await _persistenceStore.CreateNewWorkflowAsync(wf);
-        //await _queueProvider.QueueWork(id, QueueType.Workflow);
+        await _queueProvider.QueueWork(id, QueueType.Workflow);
         await _eventHub.PublishNotification(new WorkflowStarted
         {
             EventTimeUtc = _dateTimeProvider.UtcNow,
@@ -133,7 +135,7 @@ public class WorkflowController : IWorkflowController
 
         var eventId = await _persistenceStore.CreateEventAsync(evt);
 
-        //await _queueProvider.QueueWork(eventId, QueueType.Event);
+        await _queueProvider.QueueWork(eventId, QueueType.Event);
     }
 
     public async Task<bool> SuspendWorkflow(string workflowId)
@@ -203,7 +205,7 @@ public class WorkflowController : IWorkflowController
             await _lockProvider.ReleaseLock(workflowId);
             if (requeue)
             {
-                //await _queueProvider.QueueWork(workflowId, QueueType.Workflow);
+                await _queueProvider.QueueWork(workflowId, QueueType.Workflow);
             }
         }
     }

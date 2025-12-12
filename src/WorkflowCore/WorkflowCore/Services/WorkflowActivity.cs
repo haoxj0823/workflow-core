@@ -116,7 +116,6 @@ internal static class WorkflowActivity
         {
             QueueType.Workflow => "workflow",
             QueueType.Event => "event",
-            QueueType.Index => "index",
             _ => "unknown",
         };
     }
