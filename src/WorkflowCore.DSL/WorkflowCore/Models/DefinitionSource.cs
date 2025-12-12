@@ -1,13 +1,10 @@
-﻿using System;
+﻿namespace WorkflowCore.Models;
 
-namespace WorkflowCore.Models.DefinitionStorage
+public abstract class DefinitionSource
 {
-    public abstract class DefinitionSource
-    {
-        public string Id { get; set; }
+    public string Id { get; set; }
 
-        public int Version { get; set; }
+    public int Version { get; set; }
 
-        public string Description { get; set; }
-    }
+    public string Description { get; set; }
 }

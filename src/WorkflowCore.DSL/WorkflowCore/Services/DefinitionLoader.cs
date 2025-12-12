@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using WorkflowCore.Exceptions;
 using WorkflowCore.Models;
-using WorkflowCore.Models.DefinitionStorage.v1;
+using WorkflowCore.Models.v1;
 using WorkflowCore.Primitives;
 
 namespace WorkflowCore.Services;
@@ -230,7 +230,7 @@ public class DefinitionLoader : IDefinitionLoader
         return result;
     }
 
-    private void AttachInputs(StepSourceV1 source, Type dataType, Type stepType, WorkflowStep step)
+    private static void AttachInputs(StepSourceV1 source, Type dataType, Type stepType, WorkflowStep step)
     {
         foreach (var input in source.Inputs)
         {
@@ -330,7 +330,7 @@ public class DefinitionLoader : IDefinitionLoader
                 break;
             }
 
-            if (propertyName.Contains("["))
+            if (propertyName.Contains('['))
             {
                 var items = propertyName.Split('[');
 
@@ -381,7 +381,7 @@ public class DefinitionLoader : IDefinitionLoader
         }
     }
 
-    private void AttachOutcomes(StepSourceV1 source, Type dataType, WorkflowStep step)
+    private static void AttachOutcomes(StepSourceV1 source, Type dataType, WorkflowStep step)
     {
         if (!string.IsNullOrEmpty(source.NextStepId))
         {

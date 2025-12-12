@@ -1,5 +1,5 @@
 ﻿using WorkflowCore.Models;
-using WorkflowCore.Models.DefinitionStorage.v1;
+using WorkflowCore.Models.v1;
 
 namespace WorkflowCore.Services;
 

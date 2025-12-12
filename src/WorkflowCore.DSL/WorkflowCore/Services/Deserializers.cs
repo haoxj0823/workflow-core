@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 using SharpYaml.Serialization;
-using WorkflowCore.Models.DefinitionStorage.v1;
+using WorkflowCore.Models.v1;
 
 namespace WorkflowCore.Services;
 

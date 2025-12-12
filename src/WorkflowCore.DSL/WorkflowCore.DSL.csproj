@@ -7,8 +7,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SharpYaml" Version="1.6.5" />
-		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.0" />
+		<PackageReference Include="SharpYaml" Version="2.1.4" />
+		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.1" />
 	</ItemGroup>
 
 	<ItemGroup>
