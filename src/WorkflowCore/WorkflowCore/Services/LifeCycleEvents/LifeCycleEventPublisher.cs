@@ -61,6 +61,8 @@ public class LifeCycleEventPublisher : ILifeCycleEventPublisher, IDisposable
     public void Dispose()
     {
         _outbox.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 
     private async void Execute()
@@ -73,7 +75,7 @@ public class LifeCycleEventPublisher : ILifeCycleEventPublisher, IDisposable
             }
             catch (Exception ex)
             {
-                _logger.LogError(default, ex, ex.Message);
+                _logger.LogError(default, ex, "{Message}", ex.Message);
             }
         }
     }

@@ -39,5 +39,6 @@ public class SingleNodeQueueProvider : IQueueProvider
 
     public void Dispose()
     {
+        GC.SuppressFinalize(this);
     }
 }
