@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using WorkflowCore.Models;
 using WorkflowCore.Models.LifeCycleEvents;
 using WorkflowCore.Services.LifeCycleEvents;
@@ -18,7 +19,7 @@ public class WorkflowExecutor : IWorkflowExecutor
     private readonly ICancellationProcessor _cancellationProcessor;
     private readonly IExecutionScheduler _executionScheduler;
     private readonly ILifeCycleEventPublisher _publisher;
-    private readonly WorkflowOptions _options;
+    private readonly WorkflowOptions _workflowOptions;
     private readonly ILogger<WorkflowExecutor> _logger;
 
     private IWorkflowHost Host => _serviceProvider.GetService<IWorkflowHost>();
@@ -32,7 +33,7 @@ public class WorkflowExecutor : IWorkflowExecutor
         ILifeCycleEventPublisher publisher,
         ICancellationProcessor cancellationProcessor,
         IExecutionScheduler executionScheduler,
-        WorkflowOptions options,
+        IOptions<WorkflowOptions> workflowOptions,
         ILogger<WorkflowExecutor> logger)
     {
         _serviceProvider = serviceProvider;
@@ -43,7 +44,7 @@ public class WorkflowExecutor : IWorkflowExecutor
         _executionResultProcessor = executionResultProcessor;
         _cancellationProcessor = cancellationProcessor;
         _executionScheduler = executionScheduler;
-        _options = options;
+        _workflowOptions = workflowOptions.Value;
         _logger = logger;
     }
 
@@ -74,7 +75,7 @@ public class WorkflowExecutor : IWorkflowExecutor
             {
                 _logger.LogError("无法在工作流定义中找到步骤 {StepId}", pointer.StepId);
 
-                pointer.SleepUntil = _datetimeProvider.UtcNow.Add(_options.ErrorRetryInterval);
+                pointer.SleepUntil = _datetimeProvider.UtcNow.Add(_workflowOptions.ErrorRetryInterval);
                 wfResult.Errors.Add(new ExecutionError
                 {
                     WorkflowId = workflow.Id,
@@ -186,7 +187,7 @@ public class WorkflowExecutor : IWorkflowExecutor
         {
             _logger.LogError("无法构造步骤主体 {BodyType}", step.BodyType.ToString());
 
-            pointer.SleepUntil = _datetimeProvider.UtcNow.Add(_options.ErrorRetryInterval);
+            pointer.SleepUntil = _datetimeProvider.UtcNow.Add(_workflowOptions.ErrorRetryInterval);
             wfResult.Errors.Add(new ExecutionError
             {
                 WorkflowId = workflow.Id,

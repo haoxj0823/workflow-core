@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using WorkflowCore.Models;
 using WorkflowCore.Models.LifeCycleEvents;
@@ -15,11 +16,11 @@ public class LifeCycleEventPublisher : ILifeCycleEventPublisher, IDisposable
 
     public LifeCycleEventPublisher(
         ILifeCycleEventHub eventHub,
-        WorkflowOptions workflowOptions,
+        IOptions<WorkflowOptions> workflowOptions,
         ILogger<LifeCycleEventPublisher> logger)
     {
         _eventHub = eventHub;
-        _workflowOptions = workflowOptions;
+        _workflowOptions = workflowOptions.Value;
         _logger = logger;
         _outbox = [];
     }

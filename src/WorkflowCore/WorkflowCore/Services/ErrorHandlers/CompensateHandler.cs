@@ -6,24 +6,25 @@ public class CompensateHandler : IWorkflowErrorHandler
 {
     private readonly IExecutionPointerFactory _pointerFactory;
     private readonly IDateTimeProvider _datetimeProvider;
-    private readonly WorkflowOptions _options;
 
     public WorkflowErrorHandling Type => WorkflowErrorHandling.Compensate;
 
-    public CompensateHandler(IExecutionPointerFactory pointerFactory, IDateTimeProvider datetimeProvider, WorkflowOptions options)
+    public CompensateHandler(
+        IExecutionPointerFactory pointerFactory,
+        IDateTimeProvider datetimeProvider)
     {
         _pointerFactory = pointerFactory;
         _datetimeProvider = datetimeProvider;
-        _options = options;
     }
 
     public void Handle(WorkflowInstance workflow, WorkflowDefinition def, ExecutionPointer exceptionPointer, WorkflowStep exceptionStep, Exception exception, Queue<ExecutionPointer> bubbleUpQueue)
     {
         var scope = new Stack<string>(exceptionPointer.Scope.Reverse());
         scope.Push(exceptionPointer.Id);
+
         ExecutionPointer compensationPointer = null;
 
-        while (scope.Any())
+        while (scope.Count > 0)
         {
             var pointerId = scope.Pop();
             var scopePointer = workflow.ExecutionPointers.FindById(pointerId);
@@ -31,7 +32,7 @@ public class CompensateHandler : IWorkflowErrorHandler
 
             var resume = true;
             var revert = false;
-            
+
             var txnStack = new Stack<string>(scope.Reverse());
             while (txnStack.Count > 0)
             {
@@ -65,15 +66,18 @@ public class CompensateHandler : IWorkflowErrorHandler
                 {
                     nextCompensationPointer.Active = false;
                     nextCompensationPointer.Status = PointerStatus.PendingPredecessor;
-                    nextCompensationPointer.PredecessorId = compensationPointer.Id;                        
+                    nextCompensationPointer.PredecessorId = compensationPointer.Id;
                 }
+
                 compensationPointer = nextCompensationPointer;
                 workflow.ExecutionPointers.Add(compensationPointer);
 
                 if (resume)
                 {
                     foreach (var outcomeTarget in scopeStep.Outcomes.Where(x => x.Matches(workflow.Data)))
+                    {
                         workflow.ExecutionPointers.Add(_pointerFactory.BuildNextPointer(def, scopePointer, outcomeTarget));
+                    }
                 }
             }
 
@@ -97,6 +101,7 @@ public class CompensateHandler : IWorkflowErrorHandler
                             nextCompensationPointer.PredecessorId = compensationPointer.Id;
                             compensationPointer = nextCompensationPointer;
                         }
+
                         workflow.ExecutionPointers.Add(nextCompensationPointer);
 
                         siblingPointer.Status = PointerStatus.Compensated;

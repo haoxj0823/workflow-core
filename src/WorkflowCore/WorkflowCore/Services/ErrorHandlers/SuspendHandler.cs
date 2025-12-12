@@ -20,6 +20,7 @@ public class SuspendHandler : IWorkflowErrorHandler
     public void Handle(WorkflowInstance workflow, WorkflowDefinition def, ExecutionPointer pointer, WorkflowStep step, Exception exception, Queue<ExecutionPointer> bubbleUpQueue)
     {
         workflow.Status = WorkflowStatus.Suspended;
+
         _eventPublisher.PublishNotification(new WorkflowSuspended
         {
             EventTimeUtc = _datetimeProvider.UtcNow,
