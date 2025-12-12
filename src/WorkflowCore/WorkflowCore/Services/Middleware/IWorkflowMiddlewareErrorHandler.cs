@@ -10,5 +10,5 @@ public interface IWorkflowMiddlewareErrorHandler
     /// </summary>
     /// <param name="ex">The exception to handle</param>
     /// <returns>A task that completes when handling is done.</returns>
-    Task HandleAsync(Exception ex);
+    Task HandleAsync(Exception ex, CancellationToken cancellationToken = default);
 }

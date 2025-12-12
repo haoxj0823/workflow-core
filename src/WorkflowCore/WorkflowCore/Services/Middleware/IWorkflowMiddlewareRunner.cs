@@ -16,7 +16,7 @@ public interface IWorkflowMiddlewareRunner
     /// <param name="workflow">The <see cref="WorkflowInstance"/> to run for.</param>
     /// <param name="def">The <see cref="WorkflowDefinition"/> definition.</param>
     /// <returns>A task that will complete when all middleware has run.</returns>
-    Task RunPreMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def);
+    Task RunPreMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Runs workflow-level middleware that is set to run at the
@@ -27,7 +27,7 @@ public interface IWorkflowMiddlewareRunner
     /// <param name="workflow">The <see cref="WorkflowInstance"/> to run for.</param>
     /// <param name="def">The <see cref="WorkflowDefinition"/> definition.</param>
     /// <returns>A task that will complete when all middleware has run.</returns>
-    Task RunPostMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def);
+    Task RunPostMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Runs workflow-level middleware that is set to run at the
@@ -38,5 +38,5 @@ public interface IWorkflowMiddlewareRunner
     /// <param name="workflow">The <see cref="WorkflowInstance"/> to run for.</param>
     /// <param name="def">The <see cref="WorkflowDefinition"/> definition.</param>
     /// <returns>A task that will complete when all middleware has run.</returns>
-    Task RunExecuteMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def);
+    Task RunExecuteMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def, CancellationToken cancellationToken = default);
 }

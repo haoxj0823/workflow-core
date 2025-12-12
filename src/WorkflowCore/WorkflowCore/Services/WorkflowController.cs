@@ -43,23 +43,23 @@ public class WorkflowController : IWorkflowController
         _dateTimeProvider = dateTimeProvider;
     }
 
-    public Task<string> StartWorkflow(string workflowId, object data = null, string reference = null)
+    public Task<string> StartWorkflowAsync(string workflowId, object data = null, string reference = null, CancellationToken cancellationToken = default)
     {
-        return StartWorkflow(workflowId, null, data, reference);
+        return StartWorkflowAsync(workflowId, null, data, reference, cancellationToken);
     }
 
-    public Task<string> StartWorkflow(string workflowId, int? version, object data = null, string reference = null)
+    public Task<string> StartWorkflowAsync(string workflowId, int? version, object data = null, string reference = null, CancellationToken cancellationToken = default)
     {
-        return StartWorkflow<object>(workflowId, version, data, reference);
+        return StartWorkflowAsync<object>(workflowId, version, data, reference, cancellationToken);
     }
 
-    public Task<string> StartWorkflow<TData>(string workflowId, TData data = null, string reference = null)
+    public Task<string> StartWorkflowAsync<TData>(string workflowId, TData data = null, string reference = null, CancellationToken cancellationToken = default)
         where TData : class, new()
     {
-        return StartWorkflow(workflowId, null, data, reference);
+        return StartWorkflowAsync(workflowId, null, data, reference, cancellationToken);
     }
 
-    public async Task<string> StartWorkflow<TData>(string workflowId, int? version, TData data = null, string reference = null)
+    public async Task<string> StartWorkflowAsync<TData>(string workflowId, int? version, TData data = null, string reference = null, CancellationToken cancellationToken = default)
         where TData : class, new()
     {
         var def = _registry.GetDefinition(workflowId, version);
@@ -97,23 +97,25 @@ public class WorkflowController : IWorkflowController
         using (var scope = _serviceProvider.CreateScope())
         {
             var middlewareRunner = scope.ServiceProvider.GetRequiredService<IWorkflowMiddlewareRunner>();
-            await middlewareRunner.RunPreMiddlewareAsync(wf, def);
+            await middlewareRunner.RunPreMiddlewareAsync(wf, def, cancellationToken);
         }
 
-        string id = await _persistenceStore.CreateNewWorkflowAsync(wf);
-        await _queueProvider.QueueWork(id, QueueType.Workflow);
-        await _eventHub.PublishNotification(new WorkflowStarted
+        string id = await _persistenceStore.CreateNewWorkflowAsync(wf, cancellationToken);
+
+        await _queueProvider.QueueWorkAsync(id, QueueType.Workflow, cancellationToken);
+        await _eventHub.PublishNotificationAsync(new WorkflowStarted
         {
             EventTimeUtc = _dateTimeProvider.UtcNow,
             Reference = reference,
             WorkflowInstanceId = id,
             WorkflowDefinitionId = def.Id,
             Version = def.Version
-        });
+        }, cancellationToken);
+
         return id;
     }
 
-    public async Task PublishEvent(string eventName, string eventKey, object eventData, DateTime? effectiveDate = null)
+    public async Task PublishEventAsync(string eventName, string eventKey, object eventData, DateTime? effectiveDate = null, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Creating event {EventName} {EventKey}", eventName, eventKey);
 
@@ -133,33 +135,35 @@ public class WorkflowController : IWorkflowController
         evt.EventName = eventName;
         evt.IsProcessed = false;
 
-        var eventId = await _persistenceStore.CreateEventAsync(evt);
+        var eventId = await _persistenceStore.CreateEventAsync(evt, cancellationToken);
 
-        await _queueProvider.QueueWork(eventId, QueueType.Event);
+        await _queueProvider.QueueWorkAsync(eventId, QueueType.Event, cancellationToken);
     }
 
-    public async Task<bool> SuspendWorkflow(string workflowId)
+    public async Task<bool> SuspendWorkflowAsync(string workflowId, CancellationToken cancellationToken = default)
     {
-        if (!await _lockProvider.AcquireLock(workflowId, new CancellationToken()))
+        if (!await _lockProvider.AcquireLockAsync(workflowId, CancellationToken.None))
         {
             return false;
         }
 
         try
         {
-            var wf = await _persistenceStore.GetWorkflowInstanceAsync(workflowId);
+            var wf = await _persistenceStore.GetWorkflowInstanceAsync(workflowId, cancellationToken);
             if (wf.Status == WorkflowStatus.Runnable)
             {
                 wf.Status = WorkflowStatus.Suspended;
-                await _persistenceStore.PersistWorkflowAsync(wf);
-                await _eventHub.PublishNotification(new WorkflowSuspended
+
+                await _persistenceStore.PersistWorkflowAsync(wf, cancellationToken);
+                await _eventHub.PublishNotificationAsync(new WorkflowSuspended
                 {
                     EventTimeUtc = _dateTimeProvider.UtcNow,
                     Reference = wf.Reference,
                     WorkflowInstanceId = wf.Id,
                     WorkflowDefinitionId = wf.WorkflowDefinitionId,
                     Version = wf.Version
-                });
+                }, cancellationToken);
+
                 return true;
             }
 
@@ -167,34 +171,39 @@ public class WorkflowController : IWorkflowController
         }
         finally
         {
-            await _lockProvider.ReleaseLock(workflowId);
+            await _lockProvider.ReleaseLockAsync(workflowId, CancellationToken.None);
         }
     }
 
-    public async Task<bool> ResumeWorkflow(string workflowId)
+    public async Task<bool> ResumeWorkflowAsync(string workflowId, CancellationToken cancellationToken = default)
     {
-        if (!await _lockProvider.AcquireLock(workflowId, new CancellationToken()))
+        if (!await _lockProvider.AcquireLockAsync(workflowId, CancellationToken.None))
         {
             return false;
         }
 
         bool requeue = false;
+
         try
         {
-            var wf = await _persistenceStore.GetWorkflowInstanceAsync(workflowId);
+            var wf = await _persistenceStore.GetWorkflowInstanceAsync(workflowId, cancellationToken);
             if (wf.Status == WorkflowStatus.Suspended)
             {
                 wf.Status = WorkflowStatus.Runnable;
-                await _persistenceStore.PersistWorkflowAsync(wf);
+
+                await _persistenceStore.PersistWorkflowAsync(wf, cancellationToken);
+
                 requeue = true;
-                await _eventHub.PublishNotification(new WorkflowResumed
+
+                await _eventHub.PublishNotificationAsync(new WorkflowResumed
                 {
                     EventTimeUtc = _dateTimeProvider.UtcNow,
                     Reference = wf.Reference,
                     WorkflowInstanceId = wf.Id,
                     WorkflowDefinitionId = wf.WorkflowDefinitionId,
                     Version = wf.Version
-                });
+                }, cancellationToken);
+
                 return true;
             }
 
@@ -202,42 +211,44 @@ public class WorkflowController : IWorkflowController
         }
         finally
         {
-            await _lockProvider.ReleaseLock(workflowId);
+            await _lockProvider.ReleaseLockAsync(workflowId, CancellationToken.None);
+
             if (requeue)
             {
-                await _queueProvider.QueueWork(workflowId, QueueType.Workflow);
+                await _queueProvider.QueueWorkAsync(workflowId, QueueType.Workflow, cancellationToken);
             }
         }
     }
 
-    public async Task<bool> TerminateWorkflow(string workflowId)
+    public async Task<bool> TerminateWorkflowAsync(string workflowId, CancellationToken cancellationToken = default)
     {
-        if (!await _lockProvider.AcquireLock(workflowId, new CancellationToken()))
+        if (!await _lockProvider.AcquireLockAsync(workflowId, CancellationToken.None))
         {
             return false;
         }
 
         try
         {
-            var wf = await _persistenceStore.GetWorkflowInstanceAsync(workflowId);
+            var wf = await _persistenceStore.GetWorkflowInstanceAsync(workflowId, cancellationToken);
 
             wf.Status = WorkflowStatus.Terminated;
             wf.CompleteTime = _dateTimeProvider.UtcNow;
 
-            await _persistenceStore.PersistWorkflowAsync(wf);
-            await _eventHub.PublishNotification(new WorkflowTerminated
+            await _persistenceStore.PersistWorkflowAsync(wf, cancellationToken);
+            await _eventHub.PublishNotificationAsync(new WorkflowTerminated
             {
                 EventTimeUtc = _dateTimeProvider.UtcNow,
                 Reference = wf.Reference,
                 WorkflowInstanceId = wf.Id,
                 WorkflowDefinitionId = wf.WorkflowDefinitionId,
                 Version = wf.Version
-            });
+            }, cancellationToken);
+
             return true;
         }
         finally
         {
-            await _lockProvider.ReleaseLock(workflowId);
+            await _lockProvider.ReleaseLockAsync(workflowId, CancellationToken.None);
         }
     }
 

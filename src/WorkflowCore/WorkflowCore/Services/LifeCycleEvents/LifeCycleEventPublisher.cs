@@ -69,7 +69,7 @@ public class LifeCycleEventPublisher : ILifeCycleEventPublisher, IDisposable
         {
             try
             {
-                await _eventHub.PublishNotification(evt);
+                await _eventHub.PublishNotificationAsync(evt);
             }
             catch (Exception ex)
             {

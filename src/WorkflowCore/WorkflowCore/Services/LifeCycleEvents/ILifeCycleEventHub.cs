@@ -4,11 +4,11 @@ namespace WorkflowCore.Services.LifeCycleEvents;
 
 public interface ILifeCycleEventHub
 {
-    Task PublishNotification(LifeCycleEvent evt);
+    Task PublishNotificationAsync(LifeCycleEvent evt, CancellationToken cancellationToken = default);
 
     void Subscribe(Action<LifeCycleEvent> action);
 
-    Task Start();
+    Task StartAsync(CancellationToken cancellationToken = default);
 
-    Task Stop();
+    Task StopAsync(CancellationToken cancellationToken = default);
 }

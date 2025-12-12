@@ -25,7 +25,7 @@ public class ActivityController : IActivityController
         _workflowController = workflowController;
     }
 
-    public async Task<PendingActivity> GetPendingActivity(string activityName, string workerId, TimeSpan? timeout = null)
+    public async Task<PendingActivity> GetPendingActivityAsync(string activityName, string workerId, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         var endTime = _dateTimeProvider.UtcNow.Add(timeout ?? TimeSpan.Zero);
         var firstPass = true;
@@ -34,13 +34,13 @@ public class ActivityController : IActivityController
         {
             if (!firstPass)
             {
-                await Task.Delay(100);
+                await Task.Delay(100, cancellationToken);
             }
 
-            subscription = await _subscriptionRepository.GetFirstOpenSubscriptionAsync(Event.EventTypeActivity, activityName, _dateTimeProvider.UtcNow);
+            subscription = await _subscriptionRepository.GetFirstOpenSubscriptionAsync(Event.EventTypeActivity, activityName, _dateTimeProvider.UtcNow, cancellationToken);
             if (subscription != null)
             {
-                if (!await _lockProvider.AcquireLock($"sub:{subscription.Id}", CancellationToken.None))
+                if (!await _lockProvider.AcquireLockAsync($"sub:{subscription.Id}", CancellationToken.None))
                 {
                     subscription = null;
                 }
@@ -65,7 +65,7 @@ public class ActivityController : IActivityController
                 TokenExpiry = new DateTime(DateTime.MaxValue.Ticks, DateTimeKind.Utc)
             };
 
-            if (!await _subscriptionRepository.SetSubscriptionTokenAsync(subscription.Id, result.Token, workerId, result.TokenExpiry))
+            if (!await _subscriptionRepository.SetSubscriptionTokenAsync(subscription.Id, result.Token, workerId, result.TokenExpiry, cancellationToken))
             {
                 return null;
             }
@@ -74,38 +74,38 @@ public class ActivityController : IActivityController
         }
         finally
         {
-            await _lockProvider.ReleaseLock($"sub:{subscription.Id}");
+            await _lockProvider.ReleaseLockAsync($"sub:{subscription.Id}", CancellationToken.None);
         }
     }
 
-    public async Task ReleaseActivityToken(string token)
+    public async Task ReleaseActivityTokenAsync(string token, CancellationToken cancellationToken = default)
     {
         var tokenObj = Token.Decode(token);
-        await _subscriptionRepository.ClearSubscriptionTokenAsync(tokenObj.SubscriptionId, token);
+        await _subscriptionRepository.ClearSubscriptionTokenAsync(tokenObj.SubscriptionId, token, cancellationToken);
     }
 
-    public async Task SubmitActivitySuccess(string token, object result)
+    public async Task SubmitActivitySuccessAsync(string token, object result, CancellationToken cancellationToken = default)
     {
         await SubmitActivityResult(token, new ActivityResult
         {
             Data = result,
             Status = ActivityResult.StatusType.Success
-        });
+        }, cancellationToken);
     }
 
-    public async Task SubmitActivityFailure(string token, object result)
+    public async Task SubmitActivityFailureAsync(string token, object result, CancellationToken cancellationToken = default)
     {
         await SubmitActivityResult(token, new ActivityResult
         {
             Data = result,
             Status = ActivityResult.StatusType.Fail
-        });
+        }, cancellationToken);
     }
 
-    private async Task SubmitActivityResult(string token, ActivityResult result)
+    private async Task SubmitActivityResult(string token, ActivityResult result, CancellationToken cancellationToken = default)
     {
         var tokenObj = Token.Decode(token);
-        var sub = await _subscriptionRepository.GetSubscriptionAsync(tokenObj.SubscriptionId);
+        var sub = await _subscriptionRepository.GetSubscriptionAsync(tokenObj.SubscriptionId, cancellationToken);
         if (sub == null)
         {
             throw new NotFoundException();
@@ -118,7 +118,7 @@ public class ActivityController : IActivityController
 
         result.SubscriptionId = sub.Id;
 
-        await _workflowController.PublishEvent(sub.EventName, sub.EventKey, result);
+        await _workflowController.PublishEventAsync(sub.EventName, sub.EventKey, result, null, cancellationToken);
     }
 
     class Token

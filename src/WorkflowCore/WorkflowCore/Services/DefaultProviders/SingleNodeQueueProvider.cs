@@ -12,13 +12,13 @@ public class SingleNodeQueueProvider : IQueueProvider
 
     public bool IsDequeueBlocking => true;
 
-    public Task QueueWorkAsync(string id, QueueType queue, CancellationToken cancellationToken)
+    public Task QueueWorkAsync(string id, QueueType queue, CancellationToken cancellationToken = default)
     {
         _queues[queue].Add(id, cancellationToken);
         return Task.CompletedTask;
     }
 
-    public Task<string> DequeueWorkAsync(QueueType queue, CancellationToken cancellationToken)
+    public Task<string> DequeueWorkAsync(QueueType queue, CancellationToken cancellationToken = default)
     {
         if (_queues[queue].TryTake(out string id, 100, cancellationToken))
         {
@@ -27,12 +27,12 @@ public class SingleNodeQueueProvider : IQueueProvider
         return Task.FromResult<string>(null);
     }
 
-    public Task StartAsync()
+    public Task StartAsync(CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }
 
-    public Task StopAsync()
+    public Task StopAsync(CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }

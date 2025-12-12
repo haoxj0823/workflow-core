@@ -4,5 +4,5 @@ namespace WorkflowCore.Services.Executors;
 
 public interface IWorkflowExecutor
 {
-    Task<WorkflowExecutorResult> Execute(WorkflowInstance workflow, CancellationToken cancellationToken = default);
+    Task<WorkflowExecutorResult> ExecuteAsync(WorkflowInstance workflow, CancellationToken cancellationToken = default);
 }

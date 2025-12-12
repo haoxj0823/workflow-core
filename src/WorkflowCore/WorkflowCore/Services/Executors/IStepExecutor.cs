@@ -13,5 +13,5 @@ public interface IStepExecutor
     /// <param name="context">The <see cref="IStepExecutionContext"/> in which to execute the step.</param>
     /// <param name="body">The <see cref="IStepBody"/> body.</param>
     /// <returns>A <see cref="Task{ExecutionResult}"/> to wait for the result of running the step</returns>
-    Task<ExecutionResult> ExecuteStep(IStepExecutionContext context, IStepBody body);
+    Task<ExecutionResult> ExecuteStepAsync(IStepExecutionContext context, IStepBody body, CancellationToken cancellationToken = default);
 }

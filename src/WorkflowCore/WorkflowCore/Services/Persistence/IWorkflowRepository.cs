@@ -12,9 +12,6 @@ public interface IWorkflowRepository
 
     Task<IEnumerable<string>> GetRunnableInstancesAsync(DateTime asAt, CancellationToken cancellationToken = default);
 
-    [Obsolete]
-    Task<IEnumerable<WorkflowInstance>> GetWorkflowInstancesAsync(WorkflowStatus? status, string type, DateTime? createdFrom, DateTime? createdTo, int skip, int take);
-
     Task<WorkflowInstance> GetWorkflowInstanceAsync(string Id, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<WorkflowInstance>> GetWorkflowInstancesAsync(IEnumerable<string> ids, CancellationToken cancellationToken = default);

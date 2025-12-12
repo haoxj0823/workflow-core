@@ -6,7 +6,6 @@ namespace WorkflowCore.Services.FluentBuilders;
 public interface IStepBuilder<TData, TStepBody> : IWorkflowModifier<TData, TStepBody>
     where TStepBody : IStepBody
 {
-
     IWorkflowBuilder<TData> WorkflowBuilder { get; }        
 
     WorkflowStep<TStepBody> Step { get; set; }

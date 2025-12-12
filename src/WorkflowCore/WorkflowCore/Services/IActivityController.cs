@@ -2,11 +2,11 @@
 
 public interface IActivityController
 {
-    Task<PendingActivity> GetPendingActivity(string activityName, string workerId, TimeSpan? timeout = null);
+    Task<PendingActivity> GetPendingActivityAsync(string activityName, string workerId, TimeSpan? timeout = null, CancellationToken cancellationToken = default);
 
-    Task ReleaseActivityToken(string token);
+    Task ReleaseActivityTokenAsync(string token, CancellationToken cancellationToken = default);
 
-    Task SubmitActivitySuccess(string token, object result);
+    Task SubmitActivitySuccessAsync(string token, object result, CancellationToken cancellationToken = default);
 
-    Task SubmitActivityFailure(string token, object result);
+    Task SubmitActivityFailureAsync(string token, object result, CancellationToken cancellationToken = default);
 }

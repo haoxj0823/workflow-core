@@ -22,7 +22,7 @@ public class ExecutionScheduler : IExecutionScheduler
         _publisher = publisher;
     }
 
-    public async Task DetermineNextExecutionTime(WorkflowInstance workflow, WorkflowDefinition def)
+    public async Task DetermineNextExecutionTimeAsync(WorkflowInstance workflow, WorkflowDefinition def, CancellationToken cancellationToken = default)
     {
         workflow.NextExecution = null;
 
@@ -71,7 +71,7 @@ public class ExecutionScheduler : IExecutionScheduler
         using (var scope = _serviceProvider.CreateScope())
         {
             var middlewareRunner = scope.ServiceProvider.GetRequiredService<IWorkflowMiddlewareRunner>();
-            await middlewareRunner.RunPostMiddlewareAsync(workflow, def);
+            await middlewareRunner.RunPostMiddlewareAsync(workflow, def,cancellationToken);
         }
 
         _publisher.PublishNotification(new WorkflowCompleted

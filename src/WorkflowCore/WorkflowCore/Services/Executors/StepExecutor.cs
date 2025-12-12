@@ -24,19 +24,19 @@ public class StepExecutor : IStepExecutor
     /// <param name="context">The <see cref="IStepExecutionContext"/> in which to execute the step.</param>
     /// <param name="body">The <see cref="IStepBody"/> body.</param>
     /// <returns>A <see cref="Task{ExecutionResult}"/> to wait for the result of running the step</returns>
-    public async Task<ExecutionResult> ExecuteStep(IStepExecutionContext context, IStepBody body)
+    public async Task<ExecutionResult> ExecuteStepAsync(IStepExecutionContext context, IStepBody body, CancellationToken cancellationToken = default)
     {
         // Build the middleware chain by reducing over all the middleware in reverse starting with step body
         // and building step delegates that call out to the next delegate in the chain
-        Task<ExecutionResult> Step() => body.RunAsync(context);
+        Task<ExecutionResult> Step(CancellationToken cancellationToken) => body.RunAsync(context, cancellationToken);
         var middlewareChain = _stepMiddleware
             .Reverse()
             .Aggregate(
                 (WorkflowStepDelegate)Step,
-                (previous, middleware) => () => middleware.HandleAsync(context, body, previous)
+                (previous, middleware) => cancellationToken => middleware.HandleAsync(context, body, previous, cancellationToken)
             );
 
         // Run the middleware chain
-        return await middlewareChain();
+        return await middlewareChain(cancellationToken);
     }
 }

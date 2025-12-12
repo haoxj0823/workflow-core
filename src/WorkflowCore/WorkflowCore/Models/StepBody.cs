@@ -4,10 +4,10 @@ public abstract class StepBody : IStepBody
 {
     public abstract ExecutionResult Run(IStepExecutionContext context);
 
-    public Task<ExecutionResult> RunAsync(IStepExecutionContext context)
+    public Task<ExecutionResult> RunAsync(IStepExecutionContext context, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(Run(context));
-    }        
+    }
 
     protected ExecutionResult OutcomeResult(object value)
     {

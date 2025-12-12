@@ -4,7 +4,7 @@ public class SingleNodeLockProvider : IDistributedLockProvider
 {
     private readonly HashSet<string> _locks = [];
 
-    public Task<bool> AcquireLock(string Id, CancellationToken cancellationToken)
+    public Task<bool> AcquireLockAsync(string Id, CancellationToken cancellationToken = default)
     {
         lock (_locks)
         {
@@ -19,7 +19,7 @@ public class SingleNodeLockProvider : IDistributedLockProvider
         }
     }
 
-    public Task ReleaseLock(string Id)
+    public Task ReleaseLockAsync(string Id, CancellationToken cancellationToken = default)
     {
         lock (_locks)
         {

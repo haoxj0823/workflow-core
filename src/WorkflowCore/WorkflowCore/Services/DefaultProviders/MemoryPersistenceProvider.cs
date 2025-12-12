@@ -12,7 +12,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
 
     public bool SupportsScheduledCommands => false;
 
-    public Task<string> CreateNewWorkflowAsync(WorkflowInstance workflow, CancellationToken _ = default)
+    public Task<string> CreateNewWorkflowAsync(WorkflowInstance workflow, CancellationToken cancellationToken = default)
     {
         lock (_instances)
         {
@@ -22,7 +22,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task PersistWorkflowAsync(WorkflowInstance workflow, CancellationToken _ = default)
+    public Task PersistWorkflowAsync(WorkflowInstance workflow, CancellationToken cancellationToken = default)
     {
         lock (_instances)
         {
@@ -54,7 +54,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         return Task.CompletedTask;
     }
 
-    public Task<IEnumerable<string>> GetRunnableInstancesAsync(DateTime asAt, CancellationToken _ = default)
+    public Task<IEnumerable<string>> GetRunnableInstancesAsync(DateTime asAt, CancellationToken cancellationToken = default)
     {
         lock (_instances)
         {
@@ -64,7 +64,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task<WorkflowInstance> GetWorkflowInstanceAsync(string Id, CancellationToken _ = default)
+    public Task<WorkflowInstance> GetWorkflowInstanceAsync(string Id, CancellationToken cancellationToken = default)
     {
         lock (_instances)
         {
@@ -73,7 +73,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task<IEnumerable<WorkflowInstance>> GetWorkflowInstancesAsync(IEnumerable<string> ids, CancellationToken _ = default)
+    public Task<IEnumerable<WorkflowInstance>> GetWorkflowInstancesAsync(IEnumerable<string> ids, CancellationToken cancellationToken = default)
     {
         if (ids == null)
         {
@@ -118,7 +118,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task<string> CreateEventSubscriptionAsync(EventSubscription subscription, CancellationToken _ = default)
+    public Task<string> CreateEventSubscriptionAsync(EventSubscription subscription, CancellationToken cancellationToken = default)
     {
         lock (_subscriptions)
         {
@@ -128,7 +128,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task<IEnumerable<EventSubscription>> GetSubscriptionsAsync(string eventName, string eventKey, DateTime asOf, CancellationToken _ = default)
+    public Task<IEnumerable<EventSubscription>> GetSubscriptionsAsync(string eventName, string eventKey, DateTime asOf, CancellationToken cancellationToken = default)
     {
         lock (_subscriptions)
         {
@@ -137,7 +137,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task TerminateSubscriptionAsync(string eventSubscriptionId, CancellationToken _ = default)
+    public Task TerminateSubscriptionAsync(string eventSubscriptionId, CancellationToken cancellationToken = default)
     {
         lock (_subscriptions)
         {
@@ -148,7 +148,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task<EventSubscription> GetSubscriptionAsync(string eventSubscriptionId, CancellationToken _ = default)
+    public Task<EventSubscription> GetSubscriptionAsync(string eventSubscriptionId, CancellationToken cancellationToken = default)
     {
         lock (_subscriptions)
         {
@@ -157,7 +157,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task<EventSubscription> GetFirstOpenSubscriptionAsync(string eventName, string eventKey, DateTime asOf, CancellationToken _ = default)
+    public Task<EventSubscription> GetFirstOpenSubscriptionAsync(string eventName, string eventKey, DateTime asOf, CancellationToken cancellationToken = default)
     {
         lock (_subscriptions)
         {
@@ -166,7 +166,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task<bool> SetSubscriptionTokenAsync(string eventSubscriptionId, string token, string workerId, DateTime expiry, CancellationToken _ = default)
+    public Task<bool> SetSubscriptionTokenAsync(string eventSubscriptionId, string token, string workerId, DateTime expiry, CancellationToken cancellationToken = default)
     {
         lock (_subscriptions)
         {
@@ -178,7 +178,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task ClearSubscriptionTokenAsync(string eventSubscriptionId, string token, CancellationToken _ = default)
+    public Task ClearSubscriptionTokenAsync(string eventSubscriptionId, string token, CancellationToken cancellationToken = default)
     {
         lock (_subscriptions)
         {
@@ -200,7 +200,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
     {
     }
 
-    public Task<string> CreateEventAsync(Event newEvent, CancellationToken _ = default)
+    public Task<string> CreateEventAsync(Event newEvent, CancellationToken cancellationToken = default)
     {
         lock (_events)
         {
@@ -210,7 +210,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task MarkEventProcessedAsync(string id, CancellationToken _ = default)
+    public Task MarkEventProcessedAsync(string id, CancellationToken cancellationToken = default)
     {
         lock (_events)
         {
@@ -223,7 +223,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task<IEnumerable<string>> GetRunnableEventsAsync(DateTime asAt, CancellationToken _ = default)
+    public Task<IEnumerable<string>> GetRunnableEventsAsync(DateTime asAt, CancellationToken cancellationToken = default)
     {
         lock (_events)
         {
@@ -237,7 +237,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task<Event> GetEventAsync(string id, CancellationToken _ = default)
+    public Task<Event> GetEventAsync(string id, CancellationToken cancellationToken = default)
     {
         lock (_events)
         {
@@ -245,7 +245,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task<IEnumerable<string>> GetEventsAsync(string eventName, string eventKey, DateTime asOf, CancellationToken _ = default)
+    public Task<IEnumerable<string>> GetEventsAsync(string eventName, string eventKey, DateTime asOf, CancellationToken cancellationToken = default)
     {
         lock (_events)
         {
@@ -259,7 +259,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task MarkEventUnprocessedAsync(string id, CancellationToken _ = default)
+    public Task MarkEventUnprocessedAsync(string id, CancellationToken cancellationToken = default)
     {
         lock (_events)
         {
@@ -273,7 +273,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task PersistErrorsAsync(IEnumerable<ExecutionError> errors, CancellationToken _ = default)
+    public Task PersistErrorsAsync(IEnumerable<ExecutionError> errors, CancellationToken cancellationToken = default)
     {
         lock (_errors)
         {
@@ -282,7 +282,7 @@ public class MemoryPersistenceProvider : ISingletonMemoryProvider
         }
     }
 
-    public Task ScheduleCommandAsync(ScheduledCommand command)
+    public Task ScheduleCommandAsync(ScheduledCommand command, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

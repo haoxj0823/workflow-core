@@ -18,5 +18,5 @@ public interface IWorkflowStepMiddleware
     /// <param name="body">An instance of the step body that is going to be run.</param>
     /// <param name="next">The next middleware in the chain.</param>
     /// <returns>A <see cref="Task{ExecutionResult}"/> of the workflow result.</returns>
-    Task<ExecutionResult> HandleAsync(IStepExecutionContext context, IStepBody body, WorkflowStepDelegate next);
+    Task<ExecutionResult> HandleAsync(IStepExecutionContext context, IStepBody body, WorkflowStepDelegate next, CancellationToken cancellationToken = default);
 }

@@ -22,7 +22,7 @@ public interface IQueueProvider : IDisposable
     /// <returns></returns>
     Task<string> DequeueWorkAsync(QueueType queue, CancellationToken cancellationToken = default);
 
-    Task StartAsync();
+    Task StartAsync(CancellationToken cancellationToken = default);
 
-    Task StopAsync();
+    Task StopAsync(CancellationToken cancellationToken = default);
 }

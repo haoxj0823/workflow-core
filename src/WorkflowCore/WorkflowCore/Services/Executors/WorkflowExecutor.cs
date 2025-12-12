@@ -48,7 +48,7 @@ public class WorkflowExecutor : IWorkflowExecutor
         _logger = logger;
     }
 
-    public async Task<WorkflowExecutorResult> Execute(WorkflowInstance workflow, CancellationToken cancellationToken = default)
+    public async Task<WorkflowExecutorResult> ExecuteAsync(WorkflowInstance workflow, CancellationToken cancellationToken = default)
     {
         var wfResult = new WorkflowExecutorResult();
 
@@ -119,12 +119,12 @@ public class WorkflowExecutor : IWorkflowExecutor
 
         ProcessAfterExecutionIteration(workflow, def, wfResult);
 
-        await _executionScheduler.DetermineNextExecutionTime(workflow, def);
+        await _executionScheduler.DetermineNextExecutionTimeAsync(workflow, def, cancellationToken);
 
         using (var scope = _serviceProvider.CreateScope())
         {
             var middlewareRunner = scope.ServiceProvider.GetRequiredService<IWorkflowMiddlewareRunner>();
-            await middlewareRunner.RunExecuteMiddlewareAsync(workflow, def);
+            await middlewareRunner.RunExecuteMiddlewareAsync(workflow, def, cancellationToken);
         }
 
         return wfResult;
@@ -215,7 +215,7 @@ public class WorkflowExecutor : IWorkflowExecutor
         }
 
         var stepExecutor = scope.ServiceProvider.GetRequiredService<IStepExecutor>();
-        var result = await stepExecutor.ExecuteStep(context, body);
+        var result = await stepExecutor.ExecuteStepAsync(context, body, cancellationToken);
 
         if (result.Proceed)
         {

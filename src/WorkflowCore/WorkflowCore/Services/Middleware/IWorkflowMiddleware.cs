@@ -19,5 +19,5 @@ public interface IWorkflowMiddleware
     /// <param name="next">The next middleware in the chain.</param>
     /// <returns>A <see cref="Task"/> that completes asynchronously once the
     /// middleware chain finishes running.</returns>
-    Task HandleAsync(WorkflowInstance workflow, WorkflowDelegate next);
+    Task HandleAsync(WorkflowInstance workflow, WorkflowDelegate next, CancellationToken cancellationToken = default);
 }

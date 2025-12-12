@@ -53,31 +53,31 @@ public class DefaultWorkflowHost : IWorkflowHost, IDisposable
         _lifeCycleEventHub = lifeCycleEventHub;
     }
 
-    public Task<string> StartWorkflow(string workflowId, object data = null, string reference = null)
+    public Task<string> StartWorkflowAsync(string workflowId, object data = null, string reference = null, CancellationToken cancellationToken = default)
     {
-        return _workflowController.StartWorkflow(workflowId, data, reference);
+        return _workflowController.StartWorkflowAsync(workflowId, data, reference, cancellationToken);
     }
 
-    public Task<string> StartWorkflow(string workflowId, int? version, object data = null, string reference = null)
+    public Task<string> StartWorkflowAsync(string workflowId, int? version, object data = null, string reference = null, CancellationToken cancellationToken = default)
     {
-        return _workflowController.StartWorkflow<object>(workflowId, version, data, reference);
+        return _workflowController.StartWorkflowAsync<object>(workflowId, version, data, reference, cancellationToken);
     }
 
-    public Task<string> StartWorkflow<TData>(string workflowId, TData data = null, string reference = null)
+    public Task<string> StartWorkflowAsync<TData>(string workflowId, TData data = null, string reference = null, CancellationToken cancellationToken = default)
         where TData : class, new()
     {
-        return _workflowController.StartWorkflow(workflowId, null, data, reference);
+        return _workflowController.StartWorkflowAsync(workflowId, null, data, reference, cancellationToken);
     }
 
-    public Task<string> StartWorkflow<TData>(string workflowId, int? version, TData data = null, string reference = null)
+    public Task<string> StartWorkflowAsync<TData>(string workflowId, int? version, TData data = null, string reference = null, CancellationToken cancellationToken = default)
         where TData : class, new()
     {
-        return _workflowController.StartWorkflow(workflowId, version, data, reference);
+        return _workflowController.StartWorkflowAsync(workflowId, version, data, reference, cancellationToken);
     }
 
-    public Task PublishEvent(string eventName, string eventKey, object eventData, DateTime? effectiveDate = null)
+    public Task PublishEventAsync(string eventName, string eventKey, object eventData, DateTime? effectiveDate = null, CancellationToken cancellationToken = default)
     {
-        return _workflowController.PublishEvent(eventName, eventKey, eventData, effectiveDate);
+        return _workflowController.PublishEventAsync(eventName, eventKey, eventData, effectiveDate, cancellationToken);
     }
 
     public void Start()
@@ -85,7 +85,7 @@ public class DefaultWorkflowHost : IWorkflowHost, IDisposable
         StartAsync(CancellationToken.None).Wait();
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         var activity = WorkflowActivity.StartHost();
         try
@@ -94,8 +94,8 @@ public class DefaultWorkflowHost : IWorkflowHost, IDisposable
 
             PersistenceStore.EnsureStoreExists();
 
-            await QueueProvider.StartAsync();
-            await _lifeCycleEventHub.Start();
+            await QueueProvider.StartAsync(cancellationToken);
+            await _lifeCycleEventHub.StartAsync(cancellationToken);
 
             AddEventSubscriptions();
 
@@ -117,15 +117,15 @@ public class DefaultWorkflowHost : IWorkflowHost, IDisposable
         StopAsync(CancellationToken.None).Wait();
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken = default)
     {
         _shutdown = true;
 
         Logger.LogInformation("Stopping background tasks");
         Logger.LogInformation("Worker tasks stopped");
 
-        await QueueProvider.StopAsync();
-        await _lifeCycleEventHub.Stop();
+        await QueueProvider.StopAsync(cancellationToken);
+        await _lifeCycleEventHub.StopAsync(cancellationToken);
     }
 
     public void RegisterWorkflow<TWorkflow>()
@@ -141,19 +141,19 @@ public class DefaultWorkflowHost : IWorkflowHost, IDisposable
         _workflowController.RegisterWorkflow<TWorkflow, TData>();
     }
 
-    public Task<bool> SuspendWorkflow(string workflowId)
+    public Task<bool> SuspendWorkflowAsync(string workflowId, CancellationToken cancellationToken = default)
     {
-        return _workflowController.SuspendWorkflow(workflowId);
+        return _workflowController.SuspendWorkflowAsync(workflowId, cancellationToken);
     }
 
-    public Task<bool> ResumeWorkflow(string workflowId)
+    public Task<bool> ResumeWorkflowAsync(string workflowId, CancellationToken cancellationToken = default)
     {
-        return _workflowController.ResumeWorkflow(workflowId);
+        return _workflowController.ResumeWorkflowAsync(workflowId, cancellationToken);
     }
 
-    public Task<bool> TerminateWorkflow(string workflowId)
+    public Task<bool> TerminateWorkflowAsync(string workflowId, CancellationToken cancellationToken = default)
     {
-        return _workflowController.TerminateWorkflow(workflowId);
+        return _workflowController.TerminateWorkflowAsync(workflowId, cancellationToken);
     }
 
     public void HandleLifeCycleEvent(LifeCycleEvent evt)
@@ -176,24 +176,24 @@ public class DefaultWorkflowHost : IWorkflowHost, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public Task<PendingActivity> GetPendingActivity(string activityName, string workerId, TimeSpan? timeout = null)
+    public Task<PendingActivity> GetPendingActivityAsync(string activityName, string workerId, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
-        return _activityController.GetPendingActivity(activityName, workerId, timeout);
+        return _activityController.GetPendingActivityAsync(activityName, workerId, timeout, cancellationToken);
     }
 
-    public Task ReleaseActivityToken(string token)
+    public Task ReleaseActivityTokenAsync(string token, CancellationToken cancellationToken = default)
     {
-        return _activityController.ReleaseActivityToken(token);
+        return _activityController.ReleaseActivityTokenAsync(token, cancellationToken);
     }
 
-    public Task SubmitActivitySuccess(string token, object result)
+    public Task SubmitActivitySuccessAsync(string token, object result, CancellationToken cancellationToken = default)
     {
-        return _activityController.SubmitActivitySuccess(token, result);
+        return _activityController.SubmitActivitySuccessAsync(token, result, cancellationToken);
     }
 
-    public Task SubmitActivityFailure(string token, object result)
+    public Task SubmitActivityFailureAsync(string token, object result, CancellationToken cancellationToken = default)
     {
-        return _activityController.SubmitActivityFailure(token, result);
+        return _activityController.SubmitActivityFailureAsync(token, result, cancellationToken);
     }
 
     private void AddEventSubscriptions()

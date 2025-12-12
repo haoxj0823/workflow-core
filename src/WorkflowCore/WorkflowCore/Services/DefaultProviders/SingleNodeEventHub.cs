@@ -14,7 +14,7 @@ public class SingleNodeEventHub : ILifeCycleEventHub
         _logger = logger;
     }
 
-    public Task PublishNotification(LifeCycleEvent evt)
+    public Task PublishNotificationAsync(LifeCycleEvent evt, CancellationToken cancellationToken = default)
     {
         Task.Run(() =>
         {
@@ -26,10 +26,11 @@ public class SingleNodeEventHub : ILifeCycleEventHub
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(default, ex, $"Error on event subscriber: {ex.Message}");
+                    _logger.LogWarning(default, ex, "Error on event subscriber: {Message}", ex.Message);
                 }
             }
-        });
+        }, cancellationToken);
+
         return Task.CompletedTask;
     }
 
@@ -38,12 +39,12 @@ public class SingleNodeEventHub : ILifeCycleEventHub
         _subscribers.Add(action);
     }
 
-    public Task Start()
+    public Task StartAsync(CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }
 
-    public Task Stop()
+    public Task StopAsync(CancellationToken cancellationToken = default)
     {
         _subscribers.Clear();
         return Task.CompletedTask;

@@ -30,13 +30,16 @@ public class SyncWorkflowRunner : ISyncWorkflowRunner
         _dateTimeProvider = dateTimeProvider;
     }
 
-    public Task<WorkflowInstance> RunWorkflowSync<TData>(string workflowId, int version, TData data, string reference, TimeSpan timeOut, bool persistSate = true)
+    public Task<WorkflowInstance> RunWorkflowSync<TData>(string workflowId, int version, TData data, string reference, TimeSpan timeOut, bool persistSate = true, CancellationToken cancellationToken = default)
         where TData : new()
     {
-        return RunWorkflowSync(workflowId, version, data, reference, new CancellationTokenSource(timeOut).Token, persistSate);
+        var timeoutCts = new CancellationTokenSource(timeOut);
+        var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
+
+        return RunWorkflowSync(workflowId, version, data, reference, linkedCts.Token, persistSate);
     }
 
-    public async Task<WorkflowInstance> RunWorkflowSync<TData>(string workflowId, int version, TData data, string reference, CancellationToken token, bool persistSate = true)
+    public async Task<WorkflowInstance> RunWorkflowSync<TData>(string workflowId, int version, TData data, string reference, CancellationToken cancellationToken, bool persistSate = true)
         where TData : new()
     {
         var def = _registry.GetDefinition(workflowId, version);
@@ -75,7 +78,7 @@ public class SyncWorkflowRunner : ISyncWorkflowRunner
 
         if (persistSate)
         {
-            id = await _persistenceStore.CreateNewWorkflowAsync(wf, token);
+            id = await _persistenceStore.CreateNewWorkflowAsync(wf, cancellationToken);
         }
         else
         {
@@ -84,25 +87,25 @@ public class SyncWorkflowRunner : ISyncWorkflowRunner
 
         wf.Status = WorkflowStatus.Runnable;
 
-        if (!await _lockService.AcquireLock(id, CancellationToken.None))
+        if (!await _lockService.AcquireLockAsync(id, CancellationToken.None))
         {
             throw new InvalidOperationException();
         }
 
         try
         {
-            while ((wf.Status == WorkflowStatus.Runnable) && !token.IsCancellationRequested)
+            while ((wf.Status == WorkflowStatus.Runnable) && !cancellationToken.IsCancellationRequested)
             {
-                await _executor.Execute(wf, token);
+                await _executor.ExecuteAsync(wf, cancellationToken);
                 if (persistSate)
                 {
-                    await _persistenceStore.PersistWorkflowAsync(wf, token);
+                    await _persistenceStore.PersistWorkflowAsync(wf, cancellationToken);
                 }
             }
         }
         finally
         {
-            await _lockService.ReleaseLock(id);
+            await _lockService.ReleaseLockAsync(id, CancellationToken.None);
         }
 
         return wf;

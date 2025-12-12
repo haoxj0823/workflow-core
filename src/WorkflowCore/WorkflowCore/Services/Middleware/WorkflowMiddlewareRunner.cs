@@ -5,7 +5,7 @@ namespace WorkflowCore.Services.Middleware;
 
 public class WorkflowMiddlewareRunner : IWorkflowMiddlewareRunner
 {
-    private static readonly WorkflowDelegate NoopWorkflowDelegate = () => Task.CompletedTask;
+    private static readonly WorkflowDelegate NoopWorkflowDelegate = cancellationToken => Task.CompletedTask;
 
     private readonly IEnumerable<IWorkflowMiddleware> _middleware;
     private readonly IServiceProvider _serviceProvider;
@@ -18,37 +18,40 @@ public class WorkflowMiddlewareRunner : IWorkflowMiddlewareRunner
         _serviceProvider = serviceProvider;
     }
 
-    public Task RunPreMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def)
+    public Task RunPreMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def, CancellationToken cancellationToken = default)
     {
         return RunWorkflowMiddlewareWithErrorHandlingAsync(
             workflow,
             WorkflowMiddlewarePhase.PreWorkflow,
-            middlewareErrorType: null
+            middlewareErrorType: null,
+            cancellationToken
         );
     }
 
-    public Task RunPostMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def)
+    public Task RunPostMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def, CancellationToken cancellationToken = default)
     {
         return RunWorkflowMiddlewareWithErrorHandlingAsync(
             workflow,
             WorkflowMiddlewarePhase.PostWorkflow,
-            def.OnPostMiddlewareError);
+            def.OnPostMiddlewareError,
+            cancellationToken);
     }
 
-    public Task RunExecuteMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def)
+    public Task RunExecuteMiddlewareAsync(WorkflowInstance workflow, WorkflowDefinition def, CancellationToken cancellationToken = default)
     {
         return RunWorkflowMiddlewareWithErrorHandlingAsync(
             workflow,
             WorkflowMiddlewarePhase.ExecuteWorkflow,
-            def.OnExecuteMiddlewareError);
+            def.OnExecuteMiddlewareError,
+            cancellationToken);
     }
 
-    public async Task RunWorkflowMiddlewareWithErrorHandlingAsync(WorkflowInstance workflow, WorkflowMiddlewarePhase phase, Type middlewareErrorType)
+    public async Task RunWorkflowMiddlewareWithErrorHandlingAsync(WorkflowInstance workflow, WorkflowMiddlewarePhase phase, Type middlewareErrorType, CancellationToken cancellationToken = default)
     {
         try
         {
             var middleware = _middleware.Where(m => m.Phase == phase);
-            await RunWorkflowMiddlewareAsync(workflow, middleware);
+            await RunWorkflowMiddlewareAsync(workflow, middleware, cancellationToken);
         }
         catch (Exception exception)
         {
@@ -57,17 +60,19 @@ public class WorkflowMiddlewareRunner : IWorkflowMiddlewareRunner
             var typeInstance = scope.ServiceProvider.GetService(errorHandlerType);
             if (typeInstance is IWorkflowMiddlewareErrorHandler handler)
             {
-                await handler.HandleAsync(exception);
+                await handler.HandleAsync(exception, cancellationToken);
             }
         }
     }
 
-    private static Task RunWorkflowMiddlewareAsync(WorkflowInstance workflow, IEnumerable<IWorkflowMiddleware> middlewareCollection)
+    private static async Task RunWorkflowMiddlewareAsync(WorkflowInstance workflow, IEnumerable<IWorkflowMiddleware> middlewareCollection, CancellationToken cancellationToken = default)
     {
-        return middlewareCollection
+        var middlewareChain = middlewareCollection
             .Reverse()
             .Aggregate(
                 NoopWorkflowDelegate,
-                (previous, middleware) => () => middleware.HandleAsync(workflow, previous))();
+                (previous, middleware) => cancellationToken => middleware.HandleAsync(workflow, previous, cancellationToken));
+
+        await middlewareChain(cancellationToken);
     }
 }

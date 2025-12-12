@@ -4,5 +4,5 @@ namespace WorkflowCore.Services;
 
 public interface IWorkflowPurger
 {
-    Task PurgeWorkflows(WorkflowStatus status, DateTime olderThan, CancellationToken cancellationToken = default);
+    Task PurgeWorkflowsAsync(WorkflowStatus status, DateTime olderThan, CancellationToken cancellationToken = default);
 }

@@ -2,5 +2,5 @@
 
 public abstract class StepBodyAsync : IStepBody
 {
-    public abstract Task<ExecutionResult> RunAsync(IStepExecutionContext context);
+    public abstract Task<ExecutionResult> RunAsync(IStepExecutionContext context, CancellationToken cancellationToken = default);
 }

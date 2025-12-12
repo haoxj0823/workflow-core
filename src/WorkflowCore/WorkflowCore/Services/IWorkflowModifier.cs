@@ -77,21 +77,21 @@ public interface IWorkflowModifier<TData, TStepBody>
     IStepBuilder<TData, Decide> Decide(Expression<Func<TData, object>> expression);
 
     /// <summary>
-    /// Execute a block of steps, once for each item in a collection in a parallel foreach
+    /// ExecuteAsync a block of steps, once for each item in a collection in a parallel foreach
     /// </summary>
     /// <param name="collection">Resolves a collection for iterate over</param>
     /// <returns></returns>
     IContainerStepBuilder<TData, Foreach, Foreach> ForEach(Expression<Func<TData, IEnumerable>> collection);
 
     /// <summary>
-    /// Execute a block of steps, once for each item in a collection in a RunParallel foreach
+    /// ExecuteAsync a block of steps, once for each item in a collection in a RunParallel foreach
     /// </summary>
     /// <param name="collection">Resolves a collection for iterate over</param>
     /// <returns></returns>
     IContainerStepBuilder<TData, Foreach, Foreach> ForEach(Expression<Func<TData, IEnumerable>> collection, Expression<Func<TData, bool>> runParallel);
 
     /// <summary>
-    /// Execute a block of steps, once for each item in a collection in a RunParallel foreach
+    /// ExecuteAsync a block of steps, once for each item in a collection in a RunParallel foreach
     /// </summary>
     /// <param name="collection">Resolves a collection for iterate over</param>
     /// <returns></returns>
@@ -112,14 +112,14 @@ public interface IWorkflowModifier<TData, TStepBody>
     IContainerStepBuilder<TData, While, While> While(Expression<Func<TData, IStepExecutionContext, bool>> condition);
 
     /// <summary>
-    /// Execute a block of steps if a condition is true
+    /// ExecuteAsync a block of steps if a condition is true
     /// </summary>
     /// <param name="condition">Resolves a condition to evaluate</param>
     /// <returns></returns>
     IContainerStepBuilder<TData, If, If> If(Expression<Func<TData, bool>> condition);
 
     /// <summary>
-    /// Execute a block of steps if a condition is true
+    /// ExecuteAsync a block of steps if a condition is true
     /// </summary>
     /// <param name="condition">Resolves a condition to evaluate</param>
     /// <returns></returns>
@@ -134,13 +134,13 @@ public interface IWorkflowModifier<TData, TStepBody>
         string label = null);
 
     /// <summary>
-    /// Execute multiple blocks of steps in parallel
+    /// ExecuteAsync multiple blocks of steps in parallel
     /// </summary>
     /// <returns></returns>
     IParallelStepBuilder<TData, Sequence> Parallel();
 
     /// <summary>
-    /// Execute a sequence of steps in a container
+    /// ExecuteAsync a sequence of steps in a container
     /// </summary>
     /// <returns></returns>
     IStepBuilder<TData, Sequence> Saga(Action<IWorkflowBuilder<TData>> builder);

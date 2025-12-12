@@ -20,7 +20,7 @@ public class DefaultWorkflowMiddlewareErrorHandler : IWorkflowMiddlewareErrorHan
     /// </summary>
     /// <param name="ex">The exception to handle</param>
     /// <returns>A task that completes when handling is done.</returns>
-    public Task HandleAsync(Exception ex)
+    public Task HandleAsync(Exception ex, CancellationToken cancellationToken = default)
     {
         _logger.LogError(ex, "An error occurred running workflow middleware: {Message}", ex.Message);
         return Task.CompletedTask;
