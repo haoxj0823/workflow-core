@@ -1,69 +1,68 @@
-﻿using System;
-using WorkflowCore.Interface;
+﻿using FluentAssertions;
+using System;
 using WorkflowCore.Models;
-using Xunit;
-using FluentAssertions;
-using System.Linq;
+using WorkflowCore.Services;
+using WorkflowCore.Services.FluentBuilders;
 using WorkflowCore.Testing;
+using Xunit;
 
-namespace WorkflowCore.IntegrationTests.Scenarios
+namespace WorkflowCore.IntegrationTests.Scenarios;
+
+public class CancelledEventScenario : WorkflowTest<CancelledEventScenario.EventWorkflow, CancelledEventScenario.MyDataClass>
 {
-    public class CancelledEventScenario : WorkflowTest<CancelledEventScenario.EventWorkflow, CancelledEventScenario.MyDataClass>
+    public class MyDataClass
     {
-        public class MyDataClass
+        public string StrValue { get; set; }
+    }
+
+    public class EventWorkflow : IWorkflow<MyDataClass>
+    {
+        public static bool Event1Fired = false;
+        public static bool Event2Fired = false;
+
+        public string Id => "CancelledEventWorkflow";
+        public int Version => 1;
+        public void Build(IWorkflowBuilder<MyDataClass> builder)
         {
-            public string StrValue { get; set; }
+            builder
+                .StartWith(context => ExecutionResult.Next())
+                .Parallel()
+                    .Do(branch1 => branch1
+                        .StartWith(context => ExecutionResult.Next())
+                        .WaitFor("Event1", (data, context) => context.Workflow.Id, null, data => !string.IsNullOrEmpty(data.StrValue))
+                            .Output(data => data.StrValue, step => step.EventData)
+                        .Then(context => Event1Fired = true))
+                    .Do(branch2 => branch2
+                        .StartWith(context => ExecutionResult.Next())
+                        .WaitFor("Event2", (data, context) => context.Workflow.Id, null, data => !string.IsNullOrEmpty(data.StrValue))
+                            .Output(data => data.StrValue, step => step.EventData)
+                        .Then(context => Event2Fired = true))
+                    .Join()
+                    .WaitFor("Event3", (data, context) => context.Workflow.Id, null);
         }
+    }
 
-        public class EventWorkflow : IWorkflow<MyDataClass>
-        {
-            public static bool Event1Fired = false;
-            public static bool Event2Fired = false;
+    public CancelledEventScenario()
+    {
+        Setup();
+    }
 
-            public string Id => "CancelledEventWorkflow";
-            public int Version => 1;
-            public void Build(IWorkflowBuilder<MyDataClass> builder)
-            {
-                builder
-                    .StartWith(context => ExecutionResult.Next())
-                    .Parallel()
-                        .Do(branch1 => branch1
-                            .StartWith(context => ExecutionResult.Next())
-                            .WaitFor("Event1", (data, context) => context.Workflow.Id, null, data => !string.IsNullOrEmpty(data.StrValue))
-                                .Output(data => data.StrValue, step => step.EventData)
-                            .Then(context => Event1Fired = true))
-                        .Do(branch2 => branch2
-                            .StartWith(context => ExecutionResult.Next())
-                            .WaitFor("Event2", (data, context) => context.Workflow.Id, null, data => !string.IsNullOrEmpty(data.StrValue))
-                                .Output(data => data.StrValue, step => step.EventData)
-                            .Then(context => Event2Fired = true))
-                        .Join()
-                        .WaitFor("Event3", (data, context) => context.Workflow.Id, null);
-            }
-        }
+    [Fact]
+    public void Scenario()
+    {
+        var workflowId = StartWorkflow(new MyDataClass());
+        WaitForEventSubscription("Event1", workflowId, TimeSpan.FromSeconds(30));
+        WaitForEventSubscription("Event2", workflowId, TimeSpan.FromSeconds(30));
+        Host.PublishEventAsync("Event2", workflowId, "Pass");
+        WaitForEventSubscription("Event3", workflowId, TimeSpan.FromSeconds(30));
+        Host.PublishEventAsync("Event1", workflowId, "Fail");
+        Host.PublishEventAsync("Event3", workflowId, null);
+        WaitForWorkflowToComplete(workflowId, TimeSpan.FromSeconds(30));
 
-        public CancelledEventScenario()
-        {
-            Setup();
-        }
-
-        [Fact]
-        public void Scenario()
-        {            
-            var workflowId = StartWorkflow(new MyDataClass());
-            WaitForEventSubscription("Event1", workflowId, TimeSpan.FromSeconds(30));
-            WaitForEventSubscription("Event2", workflowId, TimeSpan.FromSeconds(30));
-            Host.PublishEvent("Event2", workflowId, "Pass");
-            WaitForEventSubscription("Event3", workflowId, TimeSpan.FromSeconds(30));
-            Host.PublishEvent("Event1", workflowId, "Fail");
-            Host.PublishEvent("Event3", workflowId, null);
-            WaitForWorkflowToComplete(workflowId, TimeSpan.FromSeconds(30));
-
-            GetStatus(workflowId).Should().Be(WorkflowStatus.Complete);
-            UnhandledStepErrors.Count.Should().Be(0);
-            GetData(workflowId).StrValue.Should().Be("Pass");
-            EventWorkflow.Event1Fired.Should().BeFalse();
-            EventWorkflow.Event2Fired.Should().BeTrue();
-        }
+        GetStatus(workflowId).Should().Be(WorkflowStatus.Complete);
+        UnhandledStepErrors.Count.Should().Be(0);
+        GetData(workflowId).StrValue.Should().Be("Pass");
+        EventWorkflow.Event1Fired.Should().BeFalse();
+        EventWorkflow.Event2Fired.Should().BeTrue();
     }
 }

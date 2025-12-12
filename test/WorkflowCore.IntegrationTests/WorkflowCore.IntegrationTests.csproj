@@ -1,28 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <AssemblyName>WorkflowCore.IntegrationTests</AssemblyName>
-    <PackageId>WorkflowCore.IntegrationTests</PackageId>
-    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <TargetFrameworks>net6.0</TargetFrameworks>
-  </PropertyGroup>
+	<PropertyGroup>
+		<AssemblyName>WorkflowCore.IntegrationTests</AssemblyName>
+		<PackageId>WorkflowCore.IntegrationTests</PackageId>
+		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+		<GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+		<GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+		<TargetFrameworks>net9.0</TargetFrameworks>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\WorkflowCore\WorkflowCore.csproj" />
-    <ProjectReference Include="..\WorkflowCore.TestAssets\WorkflowCore.TestAssets.csproj" />
-    <ProjectReference Include="..\..\src\extensions\WorkflowCore.Users\WorkflowCore.Users.csproj" />
-    <ProjectReference Include="..\..\src\WorkflowCore.Testing\WorkflowCore.Testing.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\WorkflowCore\WorkflowCore.csproj" />
+		<ProjectReference Include="..\..\src\extensions\WorkflowCore.Users\WorkflowCore.Users.csproj" />
+		<ProjectReference Include="..\..\src\WorkflowCore.Testing\WorkflowCore.Testing.csproj" />
+		<ProjectReference Include="..\WorkflowCore.TestAssets\WorkflowCore.TestAssets.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.3.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.3.1" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
-  </ItemGroup>
+	<ItemGroup>
+		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+	</ItemGroup>
 
 </Project>

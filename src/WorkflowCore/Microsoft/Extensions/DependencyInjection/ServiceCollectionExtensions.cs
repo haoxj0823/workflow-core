@@ -1,5 +1,13 @@
 ﻿using WorkflowCore.Models;
+using WorkflowCore.Services;
+using WorkflowCore.Services.DefaultProviders;
+using WorkflowCore.Services.ErrorHandlers;
+using WorkflowCore.Services.Executors;
+using WorkflowCore.Services.FluentBuilders;
+using WorkflowCore.Services.LifeCycleEvents;
 using WorkflowCore.Services.Middleware;
+using WorkflowCore.Services.Persistence;
+using WorkflowCore.Services.Processors;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -9,6 +17,39 @@ public static class ServiceCollectionExtensions
     {
         var options = new WorkflowOptions();
         setupAction?.Invoke(options);
+
+        services.ConfigureOptions(options);
+
+        services.AddSingleton<ISingletonMemoryProvider, MemoryPersistenceProvider>();
+        services.AddTransient<IPersistenceProvider>(options.PersistenceFactory);
+        services.AddTransient<IWorkflowRepository>(options.PersistenceFactory);
+        services.AddTransient<ISubscriptionRepository>(options.PersistenceFactory);
+        services.AddTransient<IEventRepository>(options.PersistenceFactory);
+        services.AddSingleton<IQueueProvider>(options.QueueFactory);
+        services.AddSingleton<IDistributedLockProvider>(options.LockFactory);
+        services.AddSingleton<ILifeCycleEventHub>(options.EventHubFactory);
+
+        services.AddSingleton<IWorkflowRegistry, WorkflowRegistry>();
+        services.AddSingleton<ILifeCycleEventPublisher, LifeCycleEventPublisher>();
+        services.AddTransient<IWorkflowErrorHandler, CompensateHandler>();
+        services.AddTransient<IWorkflowErrorHandler, RetryHandler>();
+        services.AddTransient<IWorkflowErrorHandler, TerminateHandler>();
+        services.AddTransient<IWorkflowErrorHandler, SuspendHandler>();
+        services.AddSingleton<IWorkflowController, WorkflowController>();
+        services.AddSingleton<IActivityController, ActivityController>();
+        services.AddSingleton<IWorkflowHost, DefaultWorkflowHost>();
+        services.AddTransient<IStepExecutor, StepExecutor>();
+        services.AddTransient<IExecutionScheduler, ExecutionScheduler>();
+        services.AddTransient<IWorkflowMiddlewareErrorHandler, DefaultWorkflowMiddlewareErrorHandler>();
+        services.AddTransient<IWorkflowMiddlewareRunner, WorkflowMiddlewareRunner>();
+        services.AddTransient<IScopeProvider, ScopeProvider>();
+        services.AddTransient<IWorkflowExecutor, WorkflowExecutor>();
+        services.AddTransient<ICancellationProcessor, CancellationProcessor>();
+        services.AddTransient<IWorkflowBuilder, WorkflowBuilder>();
+        services.AddTransient<IDateTimeProvider, DateTimeProvider>();
+        services.AddTransient<IExecutionResultProcessor, ExecutionResultProcessor>();
+        services.AddTransient<IExecutionPointerFactory, ExecutionPointerFactory>();
+        services.AddTransient<ISyncWorkflowRunner, SyncWorkflowRunner>();
 
         return services;
     }

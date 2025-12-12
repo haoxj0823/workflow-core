@@ -1,16 +1,14 @@
-﻿using System;
-using WorkflowCore.Interface;
-using WorkflowCore.Models;
+﻿using WorkflowCore.Models;
 
-namespace WorkflowCore.TestAssets.Steps
+namespace WorkflowCore.TestAssets.Steps;
+
+public class Counter : StepBody
 {
-    public class Counter : StepBody
+    public int Value { get; set; }
+
+    public override ExecutionResult Run(IStepExecutionContext context)
     {
-        public int Value { get; set; }
-        public override ExecutionResult Run(IStepExecutionContext context)
-        {
-            Value++;
-            return ExecutionResult.Next();
-        }
+        Value++;
+        return ExecutionResult.Next();
     }
 }

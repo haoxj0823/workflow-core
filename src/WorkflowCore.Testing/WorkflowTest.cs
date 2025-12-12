@@ -1,131 +1,132 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using WorkflowCore.Interface;
 using WorkflowCore.Models;
+using WorkflowCore.Services;
+using WorkflowCore.Services.Persistence;
 
-namespace WorkflowCore.Testing
+namespace WorkflowCore.Testing;
+
+public abstract class WorkflowTest<TWorkflow, TData> : IDisposable
+    where TWorkflow : IWorkflow<TData>, new()
+    where TData : class, new()
 {
-    public abstract class WorkflowTest<TWorkflow, TData> : IDisposable
-        where TWorkflow : IWorkflow<TData>, new()
-        where TData : class, new()
+    protected IWorkflowHost Host;
+    protected IPersistenceProvider PersistenceProvider;
+    protected List<StepError> UnhandledStepErrors = [];
+
+    protected virtual void Setup()
     {
-        protected IWorkflowHost Host;
-        protected IPersistenceProvider PersistenceProvider;
-        protected List<StepError> UnhandledStepErrors = new List<StepError>();
+        // setup dependency injection
+        IServiceCollection services = new ServiceCollection();
+        services.AddLogging();
+        ConfigureServices(services);
 
-        protected virtual void Setup()
+        var serviceProvider = services.BuildServiceProvider();
+
+        PersistenceProvider = serviceProvider.GetService<IPersistenceProvider>();
+        Host = serviceProvider.GetService<IWorkflowHost>();
+        Host.RegisterWorkflow<TWorkflow, TData>();
+        Host.OnStepError += Host_OnStepError;
+        Host.Start();
+    }
+
+    protected void Host_OnStepError(WorkflowInstance workflow, WorkflowStep step, Exception exception)
+    {
+        UnhandledStepErrors.Add(new StepError
         {
-            //setup dependency injection
-            IServiceCollection services = new ServiceCollection();
-            services.AddLogging();
-            ConfigureServices(services);
+            Exception = exception,
+            Step = step,
+            Workflow = workflow
+        });
+    }
 
-            var serviceProvider = services.BuildServiceProvider();
+    protected virtual void ConfigureServices(IServiceCollection services)
+    {
+        services.AddWorkflow();
+    }
 
-            PersistenceProvider = serviceProvider.GetService<IPersistenceProvider>();
-            Host = serviceProvider.GetService<IWorkflowHost>();
-            Host.RegisterWorkflow<TWorkflow, TData>();
-            Host.OnStepError += Host_OnStepError;
-            Host.Start();
-        }
+    public string StartWorkflow(TData data)
+    {
+        var def = new TWorkflow();
+        var workflowId = Host.StartWorkflowAsync<TData>(def.Id, data).Result;
+        return workflowId;
+    }
 
-        protected void Host_OnStepError(WorkflowInstance workflow, WorkflowStep step, Exception exception)
+    public async Task<string> StartWorkflowAsync(TData data)
+    {
+        var def = new TWorkflow();
+        var workflowId = await Host.StartWorkflowAsync(def.Id, data);
+        return workflowId;
+    }
+
+    protected void WaitForWorkflowToComplete(string workflowId, TimeSpan timeOut)
+    {
+        var status = GetStatus(workflowId);
+        var counter = 0;
+        while ((status == WorkflowStatus.Runnable) && (counter < (timeOut.TotalMilliseconds / 100)))
         {
-            UnhandledStepErrors.Add(new StepError
-            {
-                Exception = exception,
-                Step = step,
-                Workflow = workflow
-            });
-        }
-
-        protected virtual void ConfigureServices(IServiceCollection services)
-        {
-            services.AddWorkflow(options => options.UsePollInterval(TimeSpan.FromSeconds(3)));
-        }
-
-        public string StartWorkflow(TData data)
-        {
-            var def = new TWorkflow();
-            var workflowId = Host.StartWorkflow<TData>(def.Id, data).Result;
-            return workflowId;
-        }
-
-        public async Task<string> StartWorkflowAsync(TData data)
-        {
-            var def = new TWorkflow();
-            var workflowId = await Host.StartWorkflow(def.Id, data);
-            return workflowId;
-        }
-
-        protected void WaitForWorkflowToComplete(string workflowId, TimeSpan timeOut)
-        {
-            var status = GetStatus(workflowId);
-            var counter = 0;
-            while ((status == WorkflowStatus.Runnable) && (counter < (timeOut.TotalMilliseconds / 100)))
-            {
-                Thread.Sleep(100);
-                counter++;
-                status = GetStatus(workflowId);
-            }
-        }
-
-        protected async Task<WorkflowStatus> WaitForWorkflowToCompleteAsync(string workflowId, TimeSpan timeOut)
-        {
-            var status = GetStatus(workflowId);
-            var counter = 0;
-            while ((status == WorkflowStatus.Runnable) && (counter < (timeOut.TotalMilliseconds / 100)))
-            {
-                await Task.Delay(100);
-                counter++;
-                status = GetStatus(workflowId);
-            }
-
-            return status;
-        }
-
-        protected IEnumerable<EventSubscription> GetActiveSubscriptons(string eventName, string eventKey)
-        {
-            return PersistenceProvider.GetSubscriptions(eventName, eventKey, DateTime.MaxValue).Result;
-        }
-
-        protected void WaitForEventSubscription(string eventName, string eventKey, TimeSpan timeOut)
-        {
-            var counter = 0;
-            while ((!GetActiveSubscriptons(eventName, eventKey).Any()) && (counter < (timeOut.TotalMilliseconds / 100)))
-            {
-                Thread.Sleep(100);
-                counter++;
-            }
-        }
-
-        protected WorkflowStatus GetStatus(string workflowId)
-        {
-            var instance = PersistenceProvider.GetWorkflowInstance(workflowId).Result;
-            return instance.Status;
-        }
-
-        protected TData GetData(string workflowId)
-        {
-            var instance = PersistenceProvider.GetWorkflowInstance(workflowId).Result;
-            return (TData)instance.Data;
-        }
-
-        public void Dispose()
-        {
-            Host.Stop();
+            Thread.Sleep(100);
+            counter++;
+            status = GetStatus(workflowId);
         }
     }
 
-    public class StepError
+    protected async Task<WorkflowStatus> WaitForWorkflowToCompleteAsync(string workflowId, TimeSpan timeOut)
     {
-        public WorkflowInstance Workflow { get; set; }
-        public WorkflowStep Step { get; set; }
-        public Exception Exception { get; set; }
+        var status = GetStatus(workflowId);
+        var counter = 0;
+        while ((status == WorkflowStatus.Runnable) && (counter < (timeOut.TotalMilliseconds / 100)))
+        {
+            await Task.Delay(100);
+            counter++;
+            status = GetStatus(workflowId);
+        }
+
+        return status;
     }
+
+    protected IEnumerable<EventSubscription> GetActiveSubscriptons(string eventName, string eventKey)
+    {
+        return PersistenceProvider.GetSubscriptionsAsync(eventName, eventKey, DateTime.MaxValue).Result;
+    }
+
+    protected void WaitForEventSubscription(string eventName, string eventKey, TimeSpan timeOut)
+    {
+        var counter = 0;
+        while ((!GetActiveSubscriptons(eventName, eventKey).Any()) && (counter < (timeOut.TotalMilliseconds / 100)))
+        {
+            Thread.Sleep(100);
+            counter++;
+        }
+    }
+
+    protected WorkflowStatus GetStatus(string workflowId)
+    {
+        var instance = PersistenceProvider.GetWorkflowInstanceAsync(workflowId).Result;
+        return instance.Status;
+    }
+
+    protected TData GetData(string workflowId)
+    {
+        var instance = PersistenceProvider.GetWorkflowInstanceAsync(workflowId).Result;
+        return (TData)instance.Data;
+    }
+
+    public void Dispose()
+    {
+        Host.Stop();
+    }
+}
+
+public class StepError
+{
+    public WorkflowInstance Workflow { get; set; }
+
+    public WorkflowStep Step { get; set; }
+
+    public Exception Exception { get; set; }
 }

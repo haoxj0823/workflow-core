@@ -1,61 +1,61 @@
-﻿using System;
-using WorkflowCore.Interface;
+﻿using FluentAssertions;
+using System;
 using WorkflowCore.Models;
-using Xunit;
-using FluentAssertions;
+using WorkflowCore.Services;
+using WorkflowCore.Services.FluentBuilders;
 using WorkflowCore.Testing;
+using Xunit;
 
-namespace WorkflowCore.IntegrationTests.Scenarios
+namespace WorkflowCore.IntegrationTests.Scenarios;
+
+public class AttachScenario : WorkflowTest<AttachScenario.GotoWorkflow, AttachScenario.MyDataClass>
 {
-    public class AttachScenario : WorkflowTest<AttachScenario.GotoWorkflow, AttachScenario.MyDataClass>
+    internal static int Step1Ticker = 0;
+    internal static int Step2Ticker = 0;
+
+    public class MyDataClass
     {
-        internal static int Step1Ticker = 0;
-        internal static int Step2Ticker = 0;
+    }
 
-        public class MyDataClass
+    public class GotoWorkflow : IWorkflow<MyDataClass>
+    {
+        public string Id => "GotoWorkflow";
+        public int Version => 1;
+        public void Build(IWorkflowBuilder<MyDataClass> builder)
         {
-        }
-
-        public class GotoWorkflow : IWorkflow<MyDataClass>
-        {
-            public string Id => "GotoWorkflow";
-            public int Version => 1;
-            public void Build(IWorkflowBuilder<MyDataClass> builder)
-            {
-                builder
+            builder
+                .StartWith(context =>
+                {
+                    Step1Ticker++;
+                    return ExecutionResult.Next();
+                })
+                    .Id("step1")
+                .If(data => Step1Ticker < 4).Do(then => then
                     .StartWith(context =>
                     {
-                        Step1Ticker++;
+                        Step2Ticker++;
                         return ExecutionResult.Next();
                     })
-                        .Id("step1")
-                    .If(data => Step1Ticker < 4).Do(then => then
-                        .StartWith(context =>
-                        {
-                            Step2Ticker++;
-                            return ExecutionResult.Next();
-                        })
-                        .Attach("step1")
-                    );
-            }
+                    .Attach("step1")
+                );
         }
+    }
 
-        public AttachScenario()
-        {
-            Setup();
-        }
+    public AttachScenario()
+    {
+        Setup();
+    }
 
-        [Fact]
-        public void Scenario()
-        {
-            var workflowId = StartWorkflow(new MyDataClass());
-            WaitForWorkflowToComplete(workflowId, TimeSpan.FromSeconds(30));
+    [Fact]
+    public void Scenario()
+    {
+        var workflowId = StartWorkflow(new MyDataClass());
+        WaitForWorkflowToComplete(workflowId, TimeSpan.FromSeconds(30));
 
-            Step1Ticker.Should().Be(4);
-            Step2Ticker.Should().Be(3);
+        Step1Ticker.Should().Be(4);
+        Step2Ticker.Should().Be(3);
 
-            GetStatus(workflowId).Should().Be(WorkflowStatus.Complete);
-            UnhandledStepErrors.Count.Should().Be(0);
-        }
+        GetStatus(workflowId).Should().Be(WorkflowStatus.Complete);
+        UnhandledStepErrors.Count.Should().Be(0);
     }
 }

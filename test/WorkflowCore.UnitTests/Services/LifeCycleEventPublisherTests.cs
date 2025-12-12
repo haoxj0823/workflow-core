@@ -6,6 +6,7 @@ using WorkflowCore.Interface;
 using WorkflowCore.Models;
 using WorkflowCore.Models.LifeCycleEvents;
 using WorkflowCore.Services;
+using WorkflowCore.Services.LifeCycleEvents;
 using Xunit;
 
 namespace WorkflowCore.UnitTests.Services
@@ -20,7 +21,7 @@ namespace WorkflowCore.UnitTests.Services
             var eventHubMock = new Mock<ILifeCycleEventHub>();
             var serviceCollectionMock = new Mock<IServiceCollection>();
 
-            var workflowOptions = new WorkflowOptions(serviceCollectionMock.Object)
+            var workflowOptions = new WorkflowOptions()
             {
                 EnableLifeCycleEventsPublisher = true
             };
