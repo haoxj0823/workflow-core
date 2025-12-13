@@ -47,13 +47,14 @@ public class LifeCycleEventPublisher : ILifeCycleEventPublisher, IDisposable
             _outbox = [];
         }
 
-        _dispatchTask = new Task(Execute);
+        _dispatchTask = new Task(async () => await ExecuteAsync());
         _dispatchTask.Start();
     }
 
     public void Stop()
     {
         _outbox.CompleteAdding();
+
         _dispatchTask.Wait();
         _dispatchTask = null;
     }
@@ -65,13 +66,13 @@ public class LifeCycleEventPublisher : ILifeCycleEventPublisher, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private async void Execute()
+    private async Task ExecuteAsync(CancellationToken cancellationToken = default)
     {
-        foreach (var evt in _outbox.GetConsumingEnumerable())
+        foreach (var evt in _outbox.GetConsumingEnumerable(cancellationToken))
         {
             try
             {
-                await _eventHub.PublishNotificationAsync(evt);
+                await _eventHub.PublishNotificationAsync(evt, cancellationToken);
             }
             catch (Exception ex)
             {
